@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block head_meta %}<meta http-equiv="refresh" content="90" />{% endblock %}
+
+{% block canvas %}
+<div class="smaller2">{{now}}</div><br/>
+
+<table width="95%"><tr><td width="45%" valign="top">
+
+<h2>Available&nbsp;agents:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</h2><br />
+
+{% for agent in agent_list %}
+    <span id="toggleagt{{ agent.id }}">
+    <a  href="#" class="{{agent['aclass']}}" title="{{agent['atitle']}}"
+    onclick="ShowSection('agt{{agent['id']}}');return false;"><span class="{{agent['aclass']}}">+{{agent['name']}} ({{agent['ip']}}){{agent['amsg']}}</span></a><br />
+   </span>
+
+   <div id="contentagt{{agent['id']}}" style="display: none">
+       <a  href="#" class="{{agent['aclass']}}" title="{{agent['atitle']}}"
+       onclick="HideSection('agt{{agent['id']}}');return false;"><span class="{{agent['aclass']}}">+{{agent['name']}} ({{agent['ip']}}){{agent['amsg']}}</span></a>
+       <br />
+       <div class="smaller">
+           &nbsp;&nbsp;<b>Name:</b> {{agent['name']}}<br />
+           &nbsp;&nbsp;<b>IP:</b> {{agent['ip']}}<br />
+           &nbsp;&nbsp;<b>Last keep alive:</b>{{agent['change_time_fmt']}}<br />
+           &nbsp;&nbsp;<b>OS:</b> {{agent['os']}}<br />
+       </div>
+   </div>
+ {% endfor %}
+
+</td>
+
+<!-- Last modified files -->
+<td valign='top' width='55%'><h2>Latest modified files: </h2><br />
+<!-- time_stamp _name sk_file_name -->
+{% for syscheck in syscheck_global_list %}
+
+<span id="togglesk{{syscheck['id']}}">
+<a  href="#" class="bluez" title="Expand {{syscheck['filename']}}"
+onclick="ShowSection('sk{{syscheck['id']}}');return false;"><span class="bluez">+{{syscheck['filename']}}</span></a><br />
+</span>
+
+<div id="contentsk{{syscheck['id']}}" style="display: none">
+
+    <a  href="#" class="bluez" title="Hide {{syscheck['filename']}}"
+    onclick="HIdeSection('sk{{syscheck['id']}}');return false;"><span class="bluez">+{{syscheck['filename']}}</span></a>
+<br />
+<div class="smaller">
+&nbsp;&nbsp;<b>File:</b> {{syscheck['filename']}}<br />
+&nbsp;&nbsp;<b>Agent:</b> {{syscheck['name']}}<br />
+&nbsp;&nbsp;<b>Modification time:</b> {{syscheck['ts']}}<br />
+</div>
+
+</div>
+
+{% endfor %}
+
+</td></tr></table>
+<br /> <br />
+
+<h2>Latest events</h2><br />
+
+{% endblock %}
