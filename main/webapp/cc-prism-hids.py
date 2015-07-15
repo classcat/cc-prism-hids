@@ -18,6 +18,7 @@ def main():
     import os_lib_handle
     import os_lib_agent
     import os_lib_syscheck
+    import os_lib_alerts
     import ossec_conf
     import datetime
     ossec_handle = os_lib_handle.os_handle_start(ossec_conf.ossec_dir)
@@ -70,6 +71,8 @@ def main():
 
     print ("syscheck_list2")
     print(syscheck_list2)
+
+    alert_list = os_lib_alerts.os_getalerts(ossec_handle, 0, 0, 30)
 
     now = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
     return render_template("main.html", now=now, agent_list=agent_list2,

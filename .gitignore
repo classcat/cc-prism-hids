@@ -1,2 +1,3 @@
 bin
 main/webapp/__pycache__
+main/pylib/Ossec/__pycache__
