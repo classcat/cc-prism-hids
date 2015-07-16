@@ -77,9 +77,22 @@ def main():
     for a in alert_list._alerts:
         print(a)
 
+    alert_count = alert_list.size() - 1
+    alert_array  = alert_list.alerts()
+
+    print("ALERT count")
+    print(alert_count)
+
+    alert_list_html = ""
+    while (alert_count>=0):
+        print(alert_array[alert_count].toHtml())
+        alert_list_html += alert_array[alert_count].toHtml()
+        alert_count -= 1
+
     now = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
     return render_template("main.html", now=now, agent_list=agent_list2,
-                                                syscheck_global_list = syscheck_list2)
+                                                syscheck_global_list = syscheck_list2,
+                                                alert_list_html=alert_list_html)
 
 @app.route("/test")
 def hello():

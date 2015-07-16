@@ -13,6 +13,23 @@ class Ossec_AlertList(object):
         self._srcip_histogram = Ossec_Histogram()
         pass
 
+    # Return the array of alerts
+    def alerts(self):
+        return self._alerts
+
+    def earliest(self):
+        return self._alerts[0]
+
+    def latest(self):
+        return self._latest
+
+    def size(self):
+        return len(self._alerts)
+
+    def toHtml(self):
+        buf = "nyanayu"
+        return buf
+
     def addAlert(self, alert):
         self._id_histogram.count(str(alert.id))
         self._level_histogram.count(str(alert.srcip))
