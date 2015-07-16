@@ -5,6 +5,7 @@ import datetime
 import os.path
 import re
 
+from Ossec.Alert import Ossec_Alert
 from Ossec.AlertList import Ossec_AlertList
 
 def __os_parsealert(fobj, curr_time,
@@ -16,6 +17,18 @@ def __os_parsealert(fobj, curr_time,
                         srcip_pattern, user_pattern,
                         log_pattern, log_regex,
                         rc_code_hash):
+
+    evt_time = 0
+    evt_id = 0
+    evt_level = 0
+    evt_description = ""
+    evt_location = ""
+    evt_srcip = ""
+    evt_user = ""
+    evt_group = ""
+    #evt_msg = [""]
+    #evt_msg.append("")
+
     while True:
         buffer = fobj.readline()
         if not buffer:
@@ -159,6 +172,8 @@ def __os_parsealert(fobj, curr_time,
         evt_msg = []
         evt_msg.append(None)
 
+        print ("EVT_MSG BEFORE")
+        print (evt_msg)
         while(len(buffer)>3):
             if buffer == "\n":
                 print("\\N found foun ############################")
@@ -181,7 +196,28 @@ def __os_parsealert(fobj, curr_time,
         print("vvv EVT_MSG vvv")
         print(evt_msg)
 
+        alert = Ossec_Alert()
+        #alert = Ossec.Alert.Ossec_Alert()
+        alert.time = evt_time
+        alert.id = evt_id
+        alert.level = evt_level
+
+        #  // TODO: Why is this being done here? Can't we just use
+        # // htmlspecialchars() before emitting this to the browser?
+        evt_user = evt_user.replace('<', "&lt;").replace('>', "&gt;")
+        alert.user = evt_user
+
+        evt_srcip = evt_srcip.replace('<', "&lt;").replace('>', "&gt;")
+        alert.srcip = evt_srcip
+
+        alert.description = evt_description
+        alert.location = evt_location
+        alert.msg = evt_msg  # 配列の代入はあり？
+
         #print (line)
+        #print(alert.dump())
+
+        return alert
         pass
     return None
     pass
@@ -226,9 +262,15 @@ def os_getalerts(ossec_handle, init_time = 0, final_time = 0, max_count = 30):
                                                         None, None, None, None, None, None, None, None)
             #);
 
+            if alert:
+                alert.dump()
+
             if alert is None:
                 break
+
+            alert_list.addAlert(alert)
             pass
 
     fobj.close()
+    return alert_list
     pass

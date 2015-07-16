@@ -73,6 +73,9 @@ def main():
     print(syscheck_list2)
 
     alert_list = os_lib_alerts.os_getalerts(ossec_handle, 0, 0, 30)
+    print ("+++++++++++++++++++")
+    for a in alert_list._alerts:
+        print(a)
 
     now = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
     return render_template("main.html", now=now, agent_list=agent_list2,
