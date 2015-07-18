@@ -4,6 +4,23 @@
 import os
 import re
 
+def __os_getdb(file, _name):
+    print (file)
+    print(_name)
+
+    fobj = open(file, 'r')
+    while True:
+        line = fobj.readline()
+        if not line:
+            break
+    fobj.close()
+
+
+    buffer = "がうがう"
+
+    return (None, buffer)
+
+
 def __os_getchanges(file, g_last_changes, _name):
 
     if not 'files' in g_last_changes:
@@ -97,9 +114,38 @@ def __os_getchanges(file, g_last_changes, _name):
 
 # Dump syscheck db
 def os_syscheck_dumpdb(ossec_handle, agent_name):
+    #$dh = NULL;
+    file = "";
+    syscheck_list = []
+    syscheck_count = 0
+
+    sk_dir = ossec_handle['dir'] + "/queue/syscheck"
+
     buffer = ""
 
-    buffer = "nyaochan"
+    # Getting all agent files
+    filelist = os.listdir(sk_dir)
+    for file in filelist:
+        _name = ""
+        if file[0] == '.':
+            continue
+
+        if file == "syscheck":
+            _name = "ossec-server"
+        else:
+            continue
+
+        # Looing for agent name
+        if _name != agent_name:
+            continue
+
+        print("MATCH ! MATCH !!!!!!!!!!")
+        (syscheck_list, buffer2) = __os_getdb(sk_dir + "/" + file, _name)
+        buffer += buffer2
+
+        # syscheck_list will not be used ...
+
+    #buffer = "nyaochan"
     return buffer
     pass
 
@@ -128,11 +174,7 @@ def os_getsyscheck(ossec_handle = None):
         syscheck_list[_name] = {}
         syscheck_list[_name]['list'] =  __os_getchanges(sk_dir + "/" + file, g_last_changes, _name);
 
-        print("############ %s ############" %_name)
-        print(syscheck_list)
-        print ("########")
-        print(syscheck_list[_name])
-        print("############")
+
         syscheck_count += 1
 
     else:
