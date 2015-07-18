@@ -1,5 +1,6 @@
 
 import os,sys
+import re
 
 from flask import Flask, session, request, redirect, render_template, url_for
 from flask import jsonify, make_response
@@ -75,10 +76,35 @@ class SysCheck(object):
 
     def _make_contents(self):
 
-        if request.method == 'POST':
-            pass
+        #<form name="dosearch" method="post" action="index.php?f=i">
+        #<table><tr valign="top">
+        #<td>
+        #Agent name: </td><td><select name="agentpattern" class="formText"><option value="ossec-server"  selected="selected"> &nbsp; ossec-server</option>
+        #</select></td>
+        #<td><input type="submit" name="ss" value="Dump database" class="button"/>
+        #</td>
+        #</tr></table>
+        #</form>
 
-        buffer = ""
+        # Initializing variables
+        u_agent = "ossec-server"
+        u_file = ""
+        USER_agent = None
+        USER_file = None
+
+        # Getting user patterns
+        strpattern = "^[0-9a-zA-Z._^ -]{1,128}$"
+        if request.method == 'POST':
+            agentpattern = request.form.get('agentpattern')
+            print("CHECK_AGENTPATTERN")
+            print(agentpattern)
+            if re.search(strpattern, agentpattern):
+                print("MATCHED")
+                USER_agent = agentpattern
+                u_agent = USER_agent
+
+            #filepattern
+            pass
 
         # Starting handle
         ossec_handle = os_lib_handle.os_handle_start(ossec_conf.ossec_dir)
@@ -86,8 +112,46 @@ class SysCheck(object):
         # Getting syscheck information
         syscheck_list = os_lib_syscheck.os_getsyscheck(ossec_handle)
 
+        buffer = ""
+
+        # Creating form
+        buffer += """\
+        <form name="dosearch" method="post" action="syscheck">
+        <table><tr valign="top">
+        <td>
+        Agent name: </td><td><select name="agentpattern" class="formText">
+"""
+
+        for agent in syscheck_list:   # global_list, ossec-server
+            sl = ""
+            if agent == "global_list":
+                break
+            elif u_agent == agent:
+                sl = ' selected ="selected"'
+
+            buffer += """<option value="%s" %s> &nbsp; %s</option>""" % (agent, sl, agent)
+
+        buffer += "</select></td>"
+
+        buffer += """    <td><input type="submit" name="ss" value="Dump database" class="button"/>"""
+
+        if USER_agent is not None:
+            buffer += """&nbsp; &nbsp;<a class="bluez" href="syscheck"> &lt;&lt;back</a>"""
+
+        buffer += """\
+            </td>
+    </tr></table>
+    </form>
+    """
+
         # Dumping database
         if request.method == 'POST':
+            if (request.form.get('ss') == "Dump database") and (USER_agent is not None):
+                print("Let's go!!!!!!!!!!!!!!!!!!!!")
+                dump_buffer = os_lib_syscheck.os_syscheck_dumpdb(ossec_handle, USER_agent)
+
+                self.contents = buffer + dump_buffer
+                return
             pass
 
         buffer += "<br /><h2>Latest modified files (for all agents): </h2>\n\n"

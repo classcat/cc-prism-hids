@@ -95,6 +95,14 @@ def __os_getchanges(file, g_last_changes, _name):
     f.close()
     pass
 
+# Dump syscheck db
+def os_syscheck_dumpdb(ossec_handle, agent_name):
+    buffer = ""
+
+    buffer = "nyaochan"
+    return buffer
+    pass
+
 def os_getsyscheck(ossec_handle = None):
     syscheck_list = {}
     syscheck_count = 0
@@ -120,10 +128,19 @@ def os_getsyscheck(ossec_handle = None):
         syscheck_list[_name] = {}
         syscheck_list[_name]['list'] =  __os_getchanges(sk_dir + "/" + file, g_last_changes, _name);
 
+        print("############ %s ############" %_name)
+        print(syscheck_list)
+        print ("########")
+        print(syscheck_list[_name])
+        print("############")
         syscheck_count += 1
 
     else:
         syscheck_list['global_list'] = g_last_changes
+        print("----------------------------")
+        for key in syscheck_list:
+            print (key)
+        print("-----------------------------")
         return(syscheck_list);
 
     return None
