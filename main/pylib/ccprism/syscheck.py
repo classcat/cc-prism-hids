@@ -105,15 +105,15 @@ class SysCheck(object):
 
             # Setting the database
             ts = int(syscheck['time_stamp'])
-            dt = datetime.datetime.fromtimestamp(ts).strftime("%m/%d/%Y")
+            dt   = datetime.datetime.fromtimestamp(ts).strftime("%m/%d/%Y")
+            dt2 = datetime.datetime.fromtimestamp(ts).strftime("%m/%d/%Y %H:%M:%S")
             if last_mod_date != dt:
                 last_mod_date = dt
                 buffer += "<br/><b>%s</b><br/>" % last_mod_date
 
             # ts = datetime.datetime.fromtimestamp(int(syscheck['time_stamp'])).strftime("%m/%d/%Y %H:%M:%S")
 
-
-            buffer += """
+            buffer += """\
                <span id="togglesk%s">
                <a  href="#" class="bluez" title="Expand %s"
                onclick="ShowSection(\'sk%s\');return false;"><span class="bluez">+
@@ -121,16 +121,35 @@ class SysCheck(object):
                </span>
             """ % (sk_count, ffile_name, sk_count, ffile_name)
 
+            buffer += """\
+                <div id="contentsk%d" style="display: none">
+
+               <a  href="#" title="Hide %s"
+               onclick="HideSection(\'sk%d\');return false;">-%s</a>
+               <br />
+               <div class="smaller">
+               &nbsp;&nbsp;<b>File:</b> %s<br />
+               &nbsp;&nbsp;<b>Agent:</b> %s<br />
+               &nbsp;&nbsp;<b>Modification time:</b>
+               %s<br />
+               </div>
+
+               </div>
+            """ % (sk_count, ffile_name, sk_count, ffile_name, ffile_name, syscheck['_name'], dt2)
+
             pass
 
-        syscheck_count = 0
-        syscheck_list2 = []
-        # {'time_stamp':time_stamp, '_name':_name, 'sk_file_name':sk_file_name}
-        for syscheck in syscheck_list['global_list']['files']:
-            ts = datetime.datetime.fromtimestamp(int(syscheck['time_stamp'])).strftime("%m/%d/%Y %H:%M:%S")
-            syscheck_list2.append({'id':syscheck_count, 'ts':ts, 'name':syscheck['_name'], 'filename':syscheck['sk_file_name']})
-            syscheck_count += 1
-        pass
+        buffer += "</td></tr></table>"
+        buffer += "<br /> <br />\n"
+
+        #syscheck_count = 0
+        #syscheck_list2 = []
+        ## {'time_stamp':time_stamp, '_name':_name, 'sk_file_name':sk_file_name}
+        #for syscheck in syscheck_list['global_list']['files']:
+        #    ts = datetime.datetime.fromtimestamp(int(syscheck['time_stamp'])).strftime("%m/%d/%Y %H:%M:%S")
+        #    syscheck_list2.append({'id':syscheck_count, 'ts':ts, 'name':syscheck['_name'], 'filename':syscheck['sk_file_name']})
+        #    syscheck_count += 1
+        #pass
 
         self.contents = buffer
 
