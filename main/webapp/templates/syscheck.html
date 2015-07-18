@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block canvas %}
+
+<form name="dosearch" method="post" action="index.php?f=i">
+<table><tr valign="top">
+<td>
+Agent name: </td><td><select name="agentpattern" class="formText">
+
+</select></td>
+
+<td><input type="submit" name="ss" value="Dump database" class="button"/>
+
+    </td>
+    </tr></table>
+    </form>
+
+<br /><h2>Latest modified files (for all agents): </h2>
+
+{% for syscheck in syscheck_global_list %}
+{{ syscheck }}
+{% endfor %}
+
+{% endblock %}
