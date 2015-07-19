@@ -96,9 +96,42 @@ def __os_getdb(file, _name):
            <th>File name</th>
            <th>Checksum</th>"""
 
-    #buffer = "がうがう"
+    if set_size == 1:
+        buffer += "<th>Size</th>"
 
-    return (None, buffer)
+    buffer += "</tr>"
+
+    # Dumping for each entry
+    db_count = 0
+    for list_name, list_val in db_list.items():
+        #print(list_name)
+        sk_class = ">"
+        sk_point = ""
+
+        if (db_count % 2) == 0:
+            sk_class = 'class="odd">'
+
+        if "ct" in list_val:
+            sk_point = """<a id="id_%s" />""" % list_val['ct']
+
+        buffer += """\
+            <tr %s<td width="45%%" valign="top">%s%s</td>
+            <td width="53%%" valign="top">%s</td>
+        """ % (sk_class, sk_point, list_name, list_val['sum'])
+        #buffer += """\
+        #<tr %s<td width="45\%" valign="top">%s%s</td><td width="53\%" valign="top">%s</td>""" % (sk_class, #sk_point, list_name, list_val['sum'])
+
+        if set_size == 1:
+            buffer += """<td width="2%%" valign="top">%s</td>""" % (list_val['size'])
+            pass
+
+        buffer += "</tr>"
+
+        db_count += 1
+
+    buffer += "</table>"
+
+    return (db_list, buffer)
 
 
 def __os_getchanges(file, g_last_changes, _name):
