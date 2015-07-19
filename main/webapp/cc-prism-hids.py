@@ -84,6 +84,10 @@ def main():
                                                 alert_list_html=alert_list_html)
 
 
+###############
+### SysCheck ###
+###############
+
 @app.route("/syscheck", methods = ['GET', 'POST'])
 def syscheck():
     from ccprism.syscheck import SysCheck
@@ -91,111 +95,17 @@ def syscheck():
     ccsyscheck = SysCheck(request)
     return ccsyscheck.getHtml()
 
-@app.route("/xxsyscheck", methods = ['GET', 'POST'])
-def xxsyscheck():
-    import datetime
-    import ossec_conf
-    import os_lib_handle
-    import os_lib_syscheck
-    if request.method == 'POST':
-        pass
 
-    ossec_handle = os_lib_handle.os_handle_start(ossec_conf.ossec_dir)
+############
+### Search ###
+############
 
-    syscheck_list = os_lib_syscheck.os_getsyscheck(ossec_handle)
+@app.route("/search", methods = ['GET', 'POST'])
+def search():
+    from ccprism.search import Search
 
-    syscheck_count = 0
-    syscheck_list2 = []
-    # {'time_stamp':time_stamp, '_name':_name, 'sk_file_name':sk_file_name}
-    for syscheck in syscheck_list['global_list']['files']:
-        ts = datetime.datetime.fromtimestamp(int(syscheck['time_stamp'])).strftime("%m/%d/%Y %H:%M:%S")
-        syscheck_list2.append({'id':syscheck_count, 'ts':ts, 'name':syscheck['_name'], 'filename':syscheck['sk_file_name']})
-        syscheck_count += 1
-        #if syscheck_count >= 10:
-        #    break
-        pass
-
-    html = """\
-    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-    <html xmlns="http://www.w3.org/1999/xhtml">
-    	<head>
-    		<title>OSSEC Web Interface - Open Source Security</title>
-            <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-            <link rel="shortcut icon" href="static/css/images/favicon.ico" />
-            <link rel="stylesheet" type="text/css" media="all"  href="static/css/cal.css" title="css/cal.css" />
-            <script type="text/javascript" src="static/js/calendar.js"></script>
-            <script type="text/javascript" src="static/js/calendar-en.js"></script>
-            <script type="text/javascript" src="static/js/calendar-setup.js"></script>
-            <script type="text/javascript" src="static/js/prototype.js"></script>
-            <script type="text/javascript" src="static/js/hide.js"></script>
-            <link rel="stylesheet" rev="stylesheet"   href="static/css/css.css" type="text/css" />
-        </head>
-        <!-- OSSEC UI header -->
-
-
-        <div id="header">
-
-          <div id="headertitle">
-          <table>
-          <tr>
-            <td>
-              &nbsp;&nbsp;<a href="http://www.ossec.net/">
-              <img width="191" height="67" src="static/img/ossec_webui.png" title="Go to OSSEC.net" alt="Go to OSSEC.net"/></a>
-            </td>
-
-            <td>
-              <img width="107" height="38" src="static/img/webui.png"/><br>&nbsp;&nbsp; <i>Version 0.8</i>
-            </td>
-          </tr>
-          </table>
-          </div>
-
-          <ul id="nav">
-          <li><a href="main" title="Main">Main</a></li>
-          <li><a href="search" title="Search events">Search</a></li>
-          <li><a href="syscheck" title="Integrity checking">Integrity checking</a></li>
-          <li><a href="stats" title="Stats">Stats</a></li>
-          <li><a href="help" title="Help">About</a></li>
-          </ul>
-        </div>
-
-
-        <!-- END OF HEADER -->
-
-    """
-
-    return html
-    #return render_template("syscheck.html", syscheck_global_list = syscheck_list2)
-    pass
-
-@app.route("/xsyscheck", methods = ['GET', 'POST'])
-def xsyscheck():
-    import datetime
-    import ossec_conf
-    import os_lib_handle
-    import os_lib_syscheck
-    if request.method == 'POST':
-        pass
-
-    ossec_handle = os_lib_handle.os_handle_start(ossec_conf.ossec_dir)
-
-    syscheck_list = os_lib_syscheck.os_getsyscheck(ossec_handle)
-
-    syscheck_count = 0
-    syscheck_list2 = []
-    # {'time_stamp':time_stamp, '_name':_name, 'sk_file_name':sk_file_name}
-    for syscheck in syscheck_list['global_list']['files']:
-        ts = datetime.datetime.fromtimestamp(int(syscheck['time_stamp'])).strftime("%m/%d/%Y %H:%M:%S")
-        syscheck_list2.append({'id':syscheck_count, 'ts':ts, 'name':syscheck['_name'], 'filename':syscheck['sk_file_name']})
-        syscheck_count += 1
-        #if syscheck_count >= 10:
-        #    break
-        pass
-
-
-    return render_template("syscheck.html", syscheck_global_list = syscheck_list2)
-    pass
-
+    ccsearch = Search(request)
+    return ccsearch.getHtml()
 
 @app.context_processor
 def example():
@@ -210,6 +120,7 @@ def utility_processor():
     def format_price(amount, currency=u'€'):
         return u'{0:.2f}{1}'.format(amount, currency)
     return dict(format_price=format_price)
+
 
 if __name__ == "__main__":
     ccprism_home = os.environ['CCPRISM_HOME']
