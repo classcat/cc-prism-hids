@@ -2,21 +2,101 @@
 # -*- coding: utf-8 -*-
 
 import os
+import datetime
 import re
 
+from collections import OrderedDict
+
 def __os_getdb(file, _name):
-    print (file)
-    print(_name)
+    db_list = OrderedDict()
+    mod_list = OrderedDict()
+    db_count = 0
+    set_size = 1
 
     fobj = open(file, 'r')
+
+    # Database pattern
+    skpattern = "^\S\S\S(\d+):(\d+):(\d+:\d+):(\S+):(\S+) \!(\d+) (.+)$"
+
     while True:
         line = fobj.readline()
         if not line:
             break
+
+        line = line.strip()
+
+        # Sanitizing input
+        line = line.replace('<', "&lt;")
+        line = line.replace('>', "&gt;")
+
+        mobj = re.search(skpattern, line)
+        if mobj:
+            sk_file_size =  mobj.group(1)
+            sk_file_perm  = mobj.group(2)
+            sk_file_owner = mobj.group(3)
+            sk_file_md5   = mobj.group(4)
+            sk_file_sha1  = mobj.group(5)
+            time_stamp   = mobj.group(6)
+            sk_file_name = mobj.group(7)
+
+            #print(sk_file_name)
+
+            if sk_file_name in db_list:
+                mod_list[time_stamp] = {0:db_count, 1:sk_file_name}
+                #mod_list.append({'time_stamp':{0:db_count, 1:sk_file_name}})
+
+                db_list[sk_file_name]['ct'] = db_count
+                db_list[sk_file_name]['time'] = time_stamp
+
+                db_list[sk_file_name]['size'] =  "%s<br />&nbsp;&nbsp; -> &nbsp;&nbsp;<br /> %s" % (db_list[sk_file_name]['size'], sk_file_size)
+
+                db_list[sk_file_name]['sum'] = "%s<br />&nbsp;&nbsp; -> &nbsp;&nbsp;<br /> md5 %s <br />sha1 %s" % (db_list[sk_file_name]['sum'], sk_file_md5, sk_file_sha1)
+
+            else:
+                #print("heyhneyhey")
+                db_list[sk_file_name] = {}
+                db_list[sk_file_name]['time'] = time_stamp
+                db_list[sk_file_name]['size'] = sk_file_size
+                db_list[sk_file_name]['sum'] = "md5 %s<br /> sha1 %s" % (sk_file_md5, sk_file_sha1)
+                pass
+
+            db_count += 1
+
     fobj.close()
 
+    # Prinitng latest files
+    buffer = ""
 
-    buffer = "がうがう"
+    buffer += "         <br /><br />"
+    buffer += "     <h2>Latest modified files:</h2><br />"
+
+    #   mod_list['time_stamp'] = {0:db_count, 1:sk_file_name}
+    mod_list_keys = mod_list.keys()
+    mod_list_keys_sorted = sorted(mod_list_keys, reverse=True)
+    for ts in mod_list_keys_sorted:
+        record = mod_list[ts]
+
+        ts2 = datetime.datetime.fromtimestamp(int(ts)).strftime("%m/%d/%Y %H:%M")
+
+        buffer += "<b>%s&nbsp;&nbsp;</b>" % ts2
+        buffer += """ <a class="bluez" href="#id_%s">%s</a><br/>""" % (record[0], record[1])
+        #print (mod_list[ts])
+
+
+
+    #for key in mod_list_keys:
+    #    print (key)
+    #print(mod_list_keys)
+
+    buffer += "\n<br /><h2>Integrity Checking database: %s</h2>\n" % _name
+
+    # Printing db
+    buffer += '<br /><br /><table width="100%">'
+    buffer += """        <tr>
+           <th>File name</th>
+           <th>Checksum</th>"""
+
+    #buffer = "がうがう"
 
     return (None, buffer)
 
@@ -150,7 +230,7 @@ def os_syscheck_dumpdb(ossec_handle, agent_name):
     pass
 
 def os_getsyscheck(ossec_handle = None):
-    syscheck_list = {}
+    syscheck_list = OrderedDict()
     syscheck_count = 0
 
     sk_dir = ossec_handle['dir'] + "/queue/syscheck"
@@ -171,19 +251,16 @@ def os_getsyscheck(ossec_handle = None):
         else:
             continue
 
+        #print("os_getsyscheck" + _name)
+        #_name = str(_name)
         syscheck_list[_name] = {}
         syscheck_list[_name]['list'] =  __os_getchanges(sk_dir + "/" + file, g_last_changes, _name);
 
-
         syscheck_count += 1
 
-    else:
-        syscheck_list['global_list'] = g_last_changes
-        print("----------------------------")
-        for key in syscheck_list:
-            print (key)
-        print("-----------------------------")
-        return(syscheck_list);
+    syscheck_list['global_list'] = g_last_changes
 
-    return None
+    return(syscheck_list);
+
+    #return None
     pass

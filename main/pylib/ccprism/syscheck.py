@@ -96,6 +96,8 @@ class SysCheck(object):
         strpattern = "^[0-9a-zA-Z._^ -]{1,128}$"
         if request.method == 'POST':
             agentpattern = request.form.get('agentpattern')
+            if not agentpattern:
+                raise Exception("something is wrong in agentpattern")
             if re.search(strpattern, agentpattern):
                 USER_agent = agentpattern
                 u_agent = USER_agent
@@ -120,6 +122,7 @@ class SysCheck(object):
 """
 
         for agent in syscheck_list.keys():   # global_list, ossec-server
+            print(agent)
             #agent = str(agent)
             sl = ""
             if agent == "global_list":
