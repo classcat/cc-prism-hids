@@ -49,6 +49,8 @@ class Search(View):
         u_user = ""
         u_location = ""
 
+        USER_final = 0
+        USER_init = 0
         USER_level = ""
 
         USER_searchid = 0
@@ -57,17 +59,49 @@ class Search(View):
         if self.is_post:
             str_searchid = self.request.form.get('searchid')
             if re.search("[a-z0-9]+", str_searchid):
-                USER_searchid = int(str_searchid)
+                print(str_searchid)
+                USER_searchid = str_searchid # It might be hex. dont use int().
 
+        if self.is_post:
+            str_monitoring = self.request.form.get('monitoring')
+            if str_monitoring and (int(str_monitoring) == 1):
+                pass
 
         # Reading user input -- being very careful parsing it
+        datepattern = "^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}):([0-9]{2})$";
+        if self.is_post:
+            str_initdate = self.request.form.get('initdate')
+            mobj = re.search(datepattern, str_initdate)
+            if mobj:
+                year = int(mobj.group(1))
+                month = int(mobj.group(2))
+                day = int(mobj.group(3))
+                hour = int(mobj.group(4))
+                minute = int(mobj.group(5))
+
+                USER_init = int(time.mktime((year, month, day, hour, minute, 0, 0, 0, -1)))
+                u_init_time = USER_init
+                # to check :
+                # print(datetime.fromtimestamp(u_init_time))
+
+        if self.is_post:
+            str_finaldate = self.request.form.get('finaldate')
+            mobj = re.search(datepattern, str_finaldate)
+            if mobj:
+                year = int(mobj.group(1))
+                month = int(mobj.group(2))
+                day = int(mobj.group(3))
+                hour = int(mobj.group(4))
+                minute = int(mobj.group(5))
+                USER_final = int(time.mktime((year, month, day, hour, minute, 0, 0, 0, -1)))
+                u_final_time = USER_final
+
         if self.is_post:
             level = self.request.form.get('level')
-            if level.isdigit() and (int(level) > 0) and (int(level) < 16):
+            if level and level.isdigit() and (int(level) > 0) and (int(level) < 16):
                 USER_level = level
                 u_level = level
 
-        print ("u_levels is %s" % u_level)
 
         buffer = ""
 
@@ -131,9 +165,9 @@ class Search(View):
 
         buffer += """\
         </td></tr></table>
-     <input type="hidden" name="searchid" value="'.$USER_searchid.'" />
+     <input type="hidden" name="searchid" value="%s" />
      </form><br /> <br />
-        """
+        """ % USER_searchid
 
         # Java script for date
         buffer += """\
