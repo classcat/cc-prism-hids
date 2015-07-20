@@ -11,6 +11,7 @@ import time
 import ossec_conf
 import os_lib_handle
 import os_lib_agent
+import os_lib_alerts
 #import os_lib_syscheck
 
 from .view import View
@@ -53,7 +54,17 @@ class Search(View):
         USER_init = 0
         USER_level = ""
 
+        USER_pattern = None
+        LOCATION_pattern = None
+        USER_group = None
+        USER_log = None
+        USER_rule = None
+        USER_srcip = None
+        USER_user = None
+
+        USER_page = 1
         USER_searchid = 0
+        USER_monitoring = 0
 
         # Getting search id
         if self.is_post:
@@ -68,6 +79,8 @@ class Search(View):
                 pass
 
         # Reading user input -- being very careful parsing it
+
+        # Initial Date
         datepattern = "^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}):([0-9]{2})$";
         if self.is_post:
             str_initdate = self.request.form.get('initdate')
@@ -84,6 +97,7 @@ class Search(View):
                 # to check :
                 # print(datetime.fromtimestamp(u_init_time))
 
+        # Final Date
         if self.is_post:
             str_finaldate = self.request.form.get('finaldate')
             mobj = re.search(datepattern, str_finaldate)
@@ -96,6 +110,7 @@ class Search(View):
                 USER_final = int(time.mktime((year, month, day, hour, minute, 0, 0, 0, -1)))
                 u_final_time = USER_final
 
+        # Level
         if self.is_post:
             level = self.request.form.get('level')
             if level and level.isdigit() and (int(level) > 0) and (int(level) < 16):
@@ -104,6 +119,13 @@ class Search(View):
 
 
         buffer = ""
+
+        # Printing current date
+        buffer += """<div class="smaller2">%s<br/>""" % datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+        if USER_monitoring == 1:
+            buffer +=  """ -- Refreshing every %s secs</div><br />""" % ossec_conf.ossec_refresh_time
+        else:
+            buffer += "</div><br/>"
 
         # Getting all agents
         agent_list = os_lib_agent.os_getagents(ossec_handle)
@@ -190,6 +212,32 @@ timeFormat     :    "24"
 
         """
 
+        buffer += "<h2>Results:</h2>\n"
+
+        # Getting stored alerts
+        if self.is_post:
+            str_search = self.request.form.get("search")
+            print("search" + str_search)
+            if str_search != "Search":
+                #output_list = os_getstoredalerts(ossec_handle, USER_searchied)
+                used_stored = 1
+            else:
+                # Getting alerts
+                output_list = os_lib_alerts.os_searchalerts(ossec_handle,
+                                    USER_searchid,
+                                    USER_init,
+                                    USER_final,
+                                    ossec_conf.ossec_max_alerts_per_page,
+                                    USER_level,
+                                    USER_rule,
+                                    LOCATION_pattern,
+                                    USER_pattern,
+                                    USER_group,
+                                    USER_srcip,
+                                    USER_user,
+                                    USER_log)
+                pass
+            pass
 
         self.contents = buffer
 

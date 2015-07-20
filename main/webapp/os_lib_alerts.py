@@ -222,6 +222,22 @@ def __os_parsealert(fobj, curr_time,
     return None
     pass
 
+
+def os_searchalerts(ossec_handle, search_id,
+                         init_time, final_time,
+                         max_count,
+                         min_level,
+                         rule_id,
+                         location_pattern,
+                         str_pattern,
+                         group_pattern,
+                         srcip_pattern,
+                         user_pattern,
+                         log_pattern)  :
+    pass
+    print("fine thanks")
+
+
 def os_getalerts(ossec_handle, init_time = 0, final_time = 0, max_count = 30):
     file = ""
     alert_list = Ossec_AlertList()
