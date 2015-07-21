@@ -7,6 +7,8 @@ from flask import jsonify, make_response
 
 from datetime import *
 import time
+import uuid
+import hashlib
 
 import ossec_conf
 import os_lib_handle
@@ -116,6 +118,26 @@ class Search(View):
             if level and level.isdigit() and (int(level) > 0) and (int(level) < 16):
                 USER_level = level
                 u_level = level
+
+        # Group pattern
+
+        # Rule pattern
+
+        # Maximum number of alerts
+
+        # Getting search id -- should be enough to avoid duplicates
+        if self.is_post:
+            print (request.form)
+            # ImmutableMultiDict([('initdate', '2015-07-21 15:00'), ('level', '3'), ('search', 'Search'), ('monitoring', '0'), ('finaldate', '2015-07-21 19:00'), ('searchid', '0')])
+            if 'search' in request.form:
+                print ("Fine !")
+                # Creating new search id
+                #  (in php)       $USER_searchid = md5(uniqid(rand(), true));
+                m = hashlib.md5()
+                m.update(str(uuid.uuid4()).encode('UTF-8'))
+                print(m.hexdigest())
+                USER_searchid = m.hexdigest()
+                USER_page = 1
 
 
         buffer = ""

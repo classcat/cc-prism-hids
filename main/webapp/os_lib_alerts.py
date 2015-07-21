@@ -1,12 +1,24 @@
 #!/usr/bin/env python
 
 import os
-import datetime
+from datetime import *
+import time
 import os.path
 import re
+import gzip
+
+from collections import OrderedDict
 
 from Ossec.Alert import Ossec_Alert
 from Ossec.AlertList import Ossec_AlertList
+
+# TODO: This can probably be a method of AlertList
+def __os_createresults(out_file, alert_list):
+    # Opening output file
+    fobj = open(out_file, "w")
+    fobj.write(alert_list.toHtml())
+    fobj.close()
+
 
 def __os_parsealert(fobj, curr_time,
                         init_time, final_time, min_level ,
@@ -34,17 +46,21 @@ def __os_parsealert(fobj, curr_time,
         if not buffer:
             break
 
+        buffer = buffer.decode('UTF-8')
+
         # ** Alert
         mobj = re.search("^\*\*\sAlert.+", buffer)
         if not mobj:
             continue
 
-        print(buffer)
         # Getting event time
         evt_time = buffer[9:19]
         if not evt_time.isdigit():
             evt_time = 0
             continue
+
+        #print(">>>>" + evt_time)
+        evt_time = int(evt_time)
 
         # Checking if event time is in the timeframe
         if (init_time != 0) and (evt_time < init_time):
@@ -74,9 +90,8 @@ def __os_parsealert(fobj, curr_time,
 
         # Getting location
         buffer = fobj.readline()
+        buffer = buffer.decode('UTF-8')
         evt_location = buffer[21:]
-        print(buffer)
-        print(evt_location)
 
         if location_pattern:
             pass
@@ -84,6 +99,7 @@ def __os_parsealert(fobj, curr_time,
         # Getting rule, level and descriptioni
         # Rule: 5502 (level 3) -> 'Login session closed.'
         buffer = fobj.readline()
+        buffer = buffer.decode('UTF-8')
         print(buffer)
         tokens = buffer.split(" ")
         if len(tokens) == 1:
@@ -109,6 +125,7 @@ def __os_parsealert(fobj, curr_time,
             continue
 
         evt_level = int(evt_level)
+        min_level = int(min_level)
 
         # Checking event level
         if evt_level < min_level:
@@ -122,7 +139,8 @@ def __os_parsealert(fobj, curr_time,
 
         # srcip
         buffer = fobj.readline()
-        print(buffer)
+        buffer = buffer.decode('UTF-8')
+
         if buffer[0:7] == "Src IP:":
             print("Match !!!!")
             # run srcip code
@@ -134,7 +152,6 @@ def __os_parsealert(fobj, curr_time,
             # if(preg_match("^([1-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(\.([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])){3}^", $evt_srcip))
             if mobj:
                 # valid IP
-                print("OKKKKkkkkkkkkkkkkkkkkkkkkkkk")
                 pass
             else:
                 evt_srcip = '(none)'
@@ -144,6 +161,7 @@ def __os_parsealert(fobj, curr_time,
 
             # read line to buffer
             buffer = fobj.readline()
+            buffer = buffer.decode('UTF-8')
 
         if buffer[0:5] == "User:":
             # run user code
@@ -161,6 +179,7 @@ def __os_parsealert(fobj, curr_time,
             print(evt_user)
 
             buffer = fobj.readline()
+            buffer = buffer.decode('UTF-8')
 
         # move on to message
 
@@ -182,9 +201,11 @@ def __os_parsealert(fobj, curr_time,
             if (str_pattern is not None): # and ():
                 pass
 
+            #buffer = buffer.decode('UTF-8')
             evt_msg[msg_id] = buffer.strip().replace('<', "&lt;").replace('>', "&gt;")
 
             buffer = fobj.readline()
+            buffer = buffer.decode('UTF-8')
             msg_id += 1
             evt_msg.append(None)
 
@@ -223,8 +244,10 @@ def __os_parsealert(fobj, curr_time,
     pass
 
 
-def os_searchalerts(ossec_handle, search_id,
-                         init_time, final_time,
+def os_searchalerts(ossec_handle,
+                        search_id,
+                         init_time,
+                         final_time,
                          max_count,
                          min_level,
                          rule_id,
@@ -234,20 +257,139 @@ def os_searchalerts(ossec_handle, search_id,
                          srcip_pattern,
                          user_pattern,
                          log_pattern)  :
-    pass
-    print("fine thanks")
+
+
+    alert_list = Ossec_AlertList()
+
+    file_count = 0
+    file_list = []
+    #file_list[0] = ""
+
+    """
+output_file[0]
+array(1) { ["count"]=> int(1000) }
+output_file[1]
+string(60) "./tmp/output-tmp.1-1000-f95606de5c49b31df3348c8001ae0ab4.php"
+
+output_file[0]
+array(2) { ["count"]=> int(2000) [1]=> int(999) }
+output_file[2]
+string(60) "./tmp/output-tmp.2-1000-f95606de5c49b31df3348c8001ae0ab4.php"
+
+output_file[0]
+array(3) { ["count"]=> int(3000) [1]=> int(999) [2]=> int(999) }
+output_file[3]
+string(60) "./tmp/output-tmp.3-1000-f95606de5c49b31df3348c8001ae0ab4.php"
+
+output_file[0]
+array(4) { ["count"]=> int(4000) [1]=> int(999) [2]=> int(999) [3]=> int(999) }
+output_file[4]
+string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
+    """
+
+    output_count = 1
+    output_file = []
+    output_file.append(OrderedDict())
+    #output_file.append(OrderedDict())
+    #output_file[0] = ""
+    #output_file[1] = ""
+
+    curr_time = int(time.time())
+
+    group_regex = None
+
+    log_regex = None
+
+    # Setting rc code
+    rc_code_hash = None
+
+    # srcip
+
+    # location
+
+    # Getting first file
+    init_loop = init_time
+    while init_loop <= final_time:
+        l_year_month = datetime.fromtimestamp(init_loop).strftime("%Y/%b") # 2015/Jul
+        l_day = datetime.fromtimestamp(init_loop).strftime("%d")
+
+        file_list.append("logs/alerts/%s/ossec-alerts-%s.log" % (l_year_month, l_day))
+        #file_list.appned(None)
+        #file_list[file_count] = "logs/alerts/%s/ossec-alerts-%s.log" % (l_year_month, l_day)
+
+        # Adding one day
+        init_loop+=86400
+        file_count += 1
+        pass
+
+    # Getting each file
+    for file in file_list:
+        print (file)
+        # If the file does not exist, it must be gzipped so switch to a
+        # compressed stream for reading and try again. If that also fails,
+        # abort this log file and continue on to the next one.
+        log_file = ossec_handle['dir'] + "/" + file
+
+        fobj = None
+        try:
+            fobj = open(log_file, "rb")
+        except Exception as e:
+            try:
+                fobj = gzip.open(log_file + ".gz", "rb")
+            except Exception as e:
+                continue
+
+        while True:
+            # Dont get more than max count alerts per page
+            if alert_list.size() >= max_count:
+                print("above max")
+                print("output_count is %s " % output_count)
+                # output_file[1]
+                # string(60) "./tmp/output-tmp.1-1000-f95606de5c49b31df3348c8001ae0ab4.php"
+                #  in python : ./tmp/output-tmp.1-1000-917f3b294dd1a044411b45813c06b58d.php
+                output_file.append("./tmp/output-tmp.%s-%s-%s.php" % (output_count, alert_list.size(), search_id))
+                print(output_file[1])
+                pass
+
+            alert = __os_parsealert(fobj, curr_time, init_time,
+                                     final_time, min_level,
+                                     rule_id, location_pattern,
+                                     str_pattern, group_pattern,
+                                     group_regex,
+                                     srcip_pattern, user_pattern,
+                                     log_pattern, log_regex,
+                                     rc_code_hash);
+
+            if alert is None:
+                break
+
+            if not 'count' in output_file[0]:
+                output_file[0]['count'] = 0
+
+            # Adding alert
+            alert_list.addAlert(alert)
+
+            pass
+
+
+        if fobj:
+            fobj.close()
+
+        # Creating last entry
+
 
 
 def os_getalerts(ossec_handle, init_time = 0, final_time = 0, max_count = 30):
     file = ""
     alert_list = Ossec_AlertList()
-    curr_time = datetime.datetime.now()
+    curr_time = datetime.now()
 
     print (ossec_handle['dir'])
 
     log_file = ossec_handle['dir'] + "/logs/alerts/alerts.log"
 
-    fobj = open(log_file, 'r')
+    fobj = open(log_file, 'rb')
+    #fobj = open(log_file, 'r')
 
     #   If times are set to zero, we monitor the last *count files. */
     if init_time == 0  and final_time == 0:

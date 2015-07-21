@@ -1,6 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+
+"""
+>>> import sys
+>>> import locale
+>>> sys.stdout.encoding
+'UTF-8'
+>>> sys.getdefaultencoding()
+'ascii'
+>>> locale.getpreferredencoding()
+'UTF-8'
+
+"""
+
 import os,sys
 
 from flask import Flask, session, request, redirect, render_template, url_for
