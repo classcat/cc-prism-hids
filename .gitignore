@@ -2,3 +2,4 @@ bin
 main/webapp/__pycache__
 main/pylib/Ossec/__pycache__
 main/pylib/ccprism/__pycache__
+tmp

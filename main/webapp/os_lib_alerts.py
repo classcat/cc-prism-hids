@@ -15,6 +15,13 @@ from Ossec.AlertList import Ossec_AlertList
 # TODO: This can probably be a method of AlertList
 def __os_createresults(out_file, alert_list):
     # Opening output file
+    myhome  = os.environ['CCPRISM_HOME']
+    mytmpdir = myhome + "/tmp"
+    if not os.path.exists(mytmpdir):
+        os.mkdir (mytmpdir)
+
+    out_file = myhome + out_file
+
     fobj = open(out_file, "w")
     fobj.write(alert_list.toHtml())
     fobj.close()
@@ -214,8 +221,6 @@ def __os_parsealert(fobj, curr_time,
             pass
 
         # if we reach here, we got a full alert.
-        print("vvv EVT_MSG vvv")
-        print(evt_msg)
 
         alert = Ossec_Alert()
         #alert = Ossec.Alert.Ossec_Alert()
@@ -290,6 +295,8 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
     output_count = 1
     output_file = []
     output_file.append(OrderedDict())
+    output_file.append(None)
+    #output_file.append(None)
     #output_file.append(OrderedDict())
     #output_file[0] = ""
     #output_file[1] = ""
@@ -324,7 +331,7 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
 
     # Getting each file
     for file in file_list:
-        print (file)
+        #print (file)
         # If the file does not exist, it must be gzipped so switch to a
         # compressed stream for reading and try again. If that also fails,
         # abort this log file and continue on to the next one.
@@ -339,17 +346,22 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
             except Exception as e:
                 continue
 
+        # Reading all the entries
         while True:
             # Dont get more than max count alerts per page
             if alert_list.size() >= max_count:
-                print("above max")
-                print("output_count is %s " % output_count)
                 # output_file[1]
                 # string(60) "./tmp/output-tmp.1-1000-f95606de5c49b31df3348c8001ae0ab4.php"
                 #  in python : ./tmp/output-tmp.1-1000-917f3b294dd1a044411b45813c06b58d.php
-                output_file.append("./tmp/output-tmp.%s-%s-%s.php" % (output_count, alert_list.size(), search_id))
-                print(output_file[1])
-                pass
+
+                output_file[output_count] = "/tmp/output-tmp.%s-%s-%s.php" % (output_count, alert_list.size(), search_id)
+
+                __os_createresults(output_file[output_count], alert_list)
+
+                output_file[0][output_count] = alert_list.size()-1
+                alert_list = Ossec_AlertList()
+                output_count += 1
+                output_file.append(None)
 
             alert = __os_parsealert(fobj, curr_time, init_time,
                                      final_time, min_level,
@@ -366,16 +378,26 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
             if not 'count' in output_file[0]:
                 output_file[0]['count'] = 0
 
+            output_file[0]['count'] += 1
+
             # Adding alert
             alert_list.addAlert(alert)
-
-            pass
-
 
         if fobj:
             fobj.close()
 
         # Creating last entry
+        output_file[output_count] = "/tmp/output-tmp.%s-%s-%s.php" % (output_count, alert_list.size(), search_id)
+        # output_file.append("./tmp/output-tmp.%s-%s-%s.php" % (output_count, alert_list.size(), search_id))
+
+        output_file[0][output_count] = alert_list.size() - 1
+        output_file.append(None)
+
+        __os_createresults(output_file[output_count], alert_list)
+
+        output_file[0]['pg'] = output_count
+
+        return output_file
 
 
 

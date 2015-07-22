@@ -67,6 +67,7 @@ class Search(View):
         USER_page = 1
         USER_searchid = 0
         USER_monitoring = 0
+        used_stored = 0
 
         # Getting search id
         if self.is_post:
@@ -125,12 +126,13 @@ class Search(View):
 
         # Maximum number of alerts
 
+        buffer = ""
+
         # Getting search id -- should be enough to avoid duplicates
         if self.is_post:
             print (request.form)
             # ImmutableMultiDict([('initdate', '2015-07-21 15:00'), ('level', '3'), ('search', 'Search'), ('monitoring', '0'), ('finaldate', '2015-07-21 19:00'), ('searchid', '0')])
             if 'search' in request.form:
-                print ("Fine !")
                 # Creating new search id
                 #  (in php)       $USER_searchid = md5(uniqid(rand(), true));
                 m = hashlib.md5()
@@ -139,8 +141,10 @@ class Search(View):
                 USER_searchid = m.hexdigest()
                 USER_page = 1
 
-
-        buffer = ""
+            else:
+                buffer += "<b class='red'>Invalid search. </b><br />\n"
+                self.contents = buffer
+                return
 
         # Printing current date
         buffer += """<div class="smaller2">%s<br/>""" % datetime.now().strftime("%m/%d/%Y %H:%M:%S")
@@ -199,7 +203,11 @@ class Search(View):
 
         buffer += "</select>"
 
-
+        # Max alerts
+        buffer += """'</td></tr><tr><td>
+            Max Alerts:</td>
+            <td><input type="text" name="max_alerts_per_page" size="8" value="%s" class="formText" /></td></tr>
+        """ % ossec_conf.ossec_max_alerts_per_page
 
         # Final form
         buffer += """\
@@ -236,6 +244,13 @@ timeFormat     :    "24"
 
         buffer += "<h2>Results:</h2>\n"
 
+        if (not USER_init) or (not USER_final) or (not USER_level):
+            buffer += "<b>No search performced.</b><br/>\n"
+            self.contents = buffer
+            return
+
+        output_list = None
+
         # Getting stored alerts
         if self.is_post:
             str_search = self.request.form.get("search")
@@ -258,7 +273,17 @@ timeFormat     :    "24"
                                     USER_srcip,
                                     USER_user,
                                     USER_log)
-                pass
+
+            if (output_list is None) or (output_list[1] is None):
+                if used_stored == 1:
+                    buffer += "<b class='red'>Nothing returned (search expired). </b><br />\n"
+                else:
+                    buffer += "<b class='red'>Nothing returned. </b><br />\n"
+
+                self.contents = buffer
+                return
+
+            print(output_list)
             pass
 
         self.contents = buffer

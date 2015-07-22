@@ -139,4 +139,6 @@ if __name__ == "__main__":
     ccprism_home = os.environ['CCPRISM_HOME']
     sys.path.insert(0, ccprism_home + "/main/pylib")
 
+    print("main scritpt : " + os.getcwd())
+
     app.run(host="0.0.0.0", debug=True)
