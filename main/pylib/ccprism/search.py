@@ -16,6 +16,8 @@ import os_lib_agent
 import os_lib_alerts
 #import os_lib_syscheck
 
+from ossec_categories import global_categories
+
 from .view import View
 
 class Search(View):
@@ -185,14 +187,13 @@ class Search(View):
               <table>
               """
 
-        # Level
+        # Minimum Level
         buffer += """<tr><td>Minimum level:</td><td><select name="level" class="formText">"""
         if int(u_level) == 1:
             buffer +=  '  <option value="1" selected="selected">All</option>'
         else:
             buffer += '   <option value="1">All</option>'
 
-        print("u_levsl ---->>>>>>>> %s" % u_level)
         for l_counter in range(15, 1, -1):
             print (l_counter)
             if l_counter == int(u_level):
@@ -202,6 +203,26 @@ class Search(View):
                 buffer += '   <option value="%s">%s</option>' % (l_counter, l_counter)
 
         buffer += "</select>"
+
+        # Category
+        buffer += """</td><td>
+        Category: </td><td><select name="grouppattern" class="formText">"""
+        buffer += '<option value="ALL" class="bluez">All categories</option>'
+        for _cat_name, _cat in global_categories.items():
+            sl = ""
+            print (_cat_name)
+            print(_cat)
+            for cat_name, cat_val  in _cat.items():
+                print("key" + cat_name)
+                print("val " + cat_val)
+                if cat_name.find("(all)") != -1:
+                    buffer += """<option class="bluez" %s value="%s">%s</option>""" % (sl, cat_val, cat_name)
+                else:
+                    buffer += """<option value="%s" %s> &nbsp; %s</option>""" % (cat_val, sl, cat_name)
+
+        buffer += '</select>'
+
+        # Str pattern
 
         # Max alerts
         buffer += """'</td></tr><tr><td>
@@ -274,17 +295,31 @@ timeFormat     :    "24"
                                     USER_user,
                                     USER_log)
 
-            if (output_list is None) or (output_list[1] is None):
-                if used_stored == 1:
-                    buffer += "<b class='red'>Nothing returned (search expired). </b><br />\n"
-                else:
-                    buffer += "<b class='red'>Nothing returned. </b><br />\n"
+        if (output_list is None) or (output_list[1] is None):
+            if used_stored == 1:
+                buffer += "<b class='red'>Nothing returned (search expired). </b><br />\n"
+            else:
+                buffer += "<b class='red'>Nothing returned. </b><br />\n"
 
-                self.contents = buffer
-                return
+            self.contents = buffer
+            return
 
-            print(output_list)
-            pass
+        # Checking for no return
+        if not 'count' in output_list[0]:
+            buffer += "<b class='red'>Nothing returned. </b><br />\n"
+            self.contents = buffer
+            return
+
+        # Checking maximum page size
+        if USER_page >= output_list[0]['pg']:
+            USER_page = output_list[0]['pg']
+
+        # Page 1
+
+        buffer += "<b>Total alerts found: </b>%s<br />" % output_list[0]['count']
+
+        print(output_list)
+
 
         self.contents = buffer
 
