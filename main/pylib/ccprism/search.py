@@ -79,6 +79,8 @@ class Search(View):
                 print(str_searchid)
                 USER_searchid = str_searchid # It might be hex. dont use int().
 
+        rt_sk = ""
+        sv_sk = 'checked="checked"'
         if self.is_post:
             str_monitoring = self.request.form.get('monitoring')
             if str_monitoring and (int(str_monitoring) == 1):
@@ -162,15 +164,19 @@ class Search(View):
 
         buffer += "<h2>Alert search options:</h2>\n"
 
-        # Search forms
+
+        #################
+        ### Search forms ###
+        #################
+
         buffer += """\
         <form name="dosearch" method="post" action="/search">
         <table><tr valign="top">
         <td><input type="radio" name="monitoring" value="0" checked="checked"/></td>
         <td>From: &nbsp;<input type="text" name="initdate"   id="i_date_a" size="17" value="%s"  maxlength="16"  class="formText" />
             <img src="static/img/calendar.gif" id="i_trigger" title="Date selector"  alt="Date selector" class="formText" />
-        </td>
-        <td>&nbsp;&nbsp;To: &nbsp;<input type="text" name="finaldate" id="f_date_a" size="17" value="%s"  maxlength="16"  class="formText" />
+        </td><td>&nbsp;&nbsp;
+        To: &nbsp;<input type="text" name="finaldate" id="f_date_a" size="17" value="%s"  maxlength="16"  class="formText" />
             <img src="static/img/calendar.gif" id="f_trigger" title="Date selector" alt="Date selector" class="formText" />
         </td>
         </tr>
@@ -181,12 +187,12 @@ class Search(View):
 
 
 
-        buffer += """<tr><td><input type="radio" name="monitoring" value="1" '.$rt_sk.'/></td>
+        buffer += """<tr><td><input type="radio" name="monitoring" value="1" %s/></td>
               <td>Real time monitoring</td></tr>
               </table>
               <br />
               <table>
-              """
+              """ % rt_sk
 
         # Minimum Level
         buffer += """<tr><td>Minimum level:</td><td><select name="level" class="formText">"""
@@ -198,7 +204,6 @@ class Search(View):
         for l_counter in range(15, 1, -1):
             print (l_counter)
             if l_counter == int(u_level):
-                print ("Match !!!!!")
                 buffer += '   <option value="%s" selected="selected">%s</option>' % (l_counter, l_counter)
             else:
                 buffer += '   <option value="%s">%s</option>' % (l_counter, l_counter)
@@ -229,11 +234,8 @@ class Search(View):
         buffer += '<option value="ALL" class="bluez">All log formats</option>'
 
         for _cat_name, _cat in log_categories.items():
-            print (_cat_name)
             #print (_cat)
             for cat_name, cat_val  in _cat.items():
-                print (cat_name)
-                print (cat_val)
                 sl = ""
                 if USER_log == cat_val:
                     sl = ' selected="selected"'
@@ -245,10 +247,26 @@ class Search(View):
         buffer += '</select>'
 
         # Srcip pattern
+        buffer += """</td></tr><tr><td>
+            Srcip: </td><td>
+            <input type="text" name="srcippattern" size="16" class="formText"
+                value="%s"/>&nbsp;&nbsp;""" % u_srcip
 
         # Rule pattern
+        buffer += """</td><td>
+            User: </td><td><input type="text" name="userpattern" size="8"
+                value="%s" class="formText" /></td></tr>""" % u_user
 
         # Location
+        buffer += """<tr><td>
+            Location:</td><td>
+            <input type="text" name="locationpattern" size="16" class="formText"
+                value="%s"/>&nbsp;&nbsp;""" % u_location
+
+        # Rule pattern
+        buffer += """</td><td>
+            Rule id: </td><td><input type="text" name="rulepattern" size="8"
+                value="%s" class="formText"/>""" % u_rule
 
         # Max alerts
         buffer += """'</td></tr><tr><td>
@@ -292,7 +310,7 @@ timeFormat     :    "24"
         buffer += "<h2>Results:</h2>\n"
 
         if (not USER_init) or (not USER_final) or (not USER_level):
-            buffer += "<b>No search performced.</b><br/>\n"
+            buffer += "<b>No search performed.</b><br/>\n"
             self.contents = buffer
             return
 
