@@ -17,6 +17,7 @@ import os_lib_alerts
 #import os_lib_syscheck
 
 from ossec_categories import global_categories
+from ossec_formats import log_categories
 
 from .view import View
 
@@ -210,11 +211,7 @@ class Search(View):
         buffer += '<option value="ALL" class="bluez">All categories</option>'
         for _cat_name, _cat in global_categories.items():
             sl = ""
-            print (_cat_name)
-            print(_cat)
             for cat_name, cat_val  in _cat.items():
-                print("key" + cat_name)
-                print("val " + cat_val)
                 if cat_name.find("(all)") != -1:
                     buffer += """<option class="bluez" %s value="%s">%s</option>""" % (sl, cat_val, cat_name)
                 else:
@@ -223,6 +220,35 @@ class Search(View):
         buffer += '</select>'
 
         # Str pattern
+        buffer += """</td></tr><tr><td>
+            Pattern: </td><td><input type="text" name="strpattern" size="16"
+            value="%s" class="formText" /></td>""" % u_pattern
+
+        # Log formats
+        buffer += '<td>Log formats: </td><td><select name="logpattern" class="formText">'
+        buffer += '<option value="ALL" class="bluez">All log formats</option>'
+
+        for _cat_name, _cat in log_categories.items():
+            print (_cat_name)
+            #print (_cat)
+            for cat_name, cat_val  in _cat.items():
+                print (cat_name)
+                print (cat_val)
+                sl = ""
+                if USER_log == cat_val:
+                    sl = ' selected="selected"'
+                if cat_name.find("(all)") != -1:
+                    buffer += """<option class="bluez" %s value="%s">%s</option>"""% (sl, cat_val, cat_name)
+                else:
+                    buffer += """<option value="%s" %s> &nbsp; %s</option>""" % (cat_val, sl, cat_name)
+
+        buffer += '</select>'
+
+        # Srcip pattern
+
+        # Rule pattern
+
+        # Location
 
         # Max alerts
         buffer += """'</td></tr><tr><td>
