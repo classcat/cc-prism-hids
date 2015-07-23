@@ -97,7 +97,7 @@ class Search(View):
         USER_rule = None
         USER_srcip = None
         USER_user = None
-        USER_page = 1
+        USER_page = int(1)
         USER_searchid = 0
         USER_monitoring = 0
         used_stored = 0
@@ -282,10 +282,10 @@ class Search(View):
 
             elif str_search == "< Prev":
                 if USER_page > 1:
-                    UESR_page -= 1
+                    UESR_page = int(USER_page) - 1
 
             elif str_search ==  "Next >":
-                USER_page += 1
+                USER_page = int(USER_page) + 1
 
             elif str_search == "Last >>":
                 USER_page = 999
@@ -483,7 +483,7 @@ timeFormat     :    "24"
             str_search = self.request.form.get("search")
 
             if str_search != "Search":
-                output_list = os_getstoredalerts(ossec_handle, USER_searchied)
+                output_list = os_lib_alerts.os_getstoredalerts(ossec_handle, USER_searchid)
                 used_stored = 1
             else:  # Searchiing for new ones
                 # Getting alerts
@@ -528,6 +528,65 @@ timeFormat     :    "24"
         if output_list[0]['pg'] > 1:
             buffer += "<b>Output divided in </b>%s pages.<br/>" % output_list[0]['pg']
 
+            buffer += '<br /><form name="dopage" method="post" action="/search">'
+
+            buffer += """\
+                <input type="submit" name="search" value="<< First" class="button" class="formText" />
+
+                <input type="submit" name="search" value="< Prev" class="button" class="formText" />
+
+                Page <b>%s</b> (%s alerts)""" % (USER_page, output_list[0][real_page])
+
+        # Currently page
+        buffer += """\
+<input type="hidden" name="initdate"  value="%s" />
+<input type="hidden" name="finaldate" value="%s" />
+<input type="hidden" name="rulepattern" value="%s" />
+<input type="hidden" name="srcippattern" value="%s" />
+<input type="hidden" name="userpattern" value="'%s" />
+<input type="hidden" name="locationpattern" value="%s" />
+<input type="hidden" name="level" value="%s" />
+<input type="hidden" name="page" value="%s" />
+<input type="hidden" name="searchid" value="%s" />
+<input type="hidden" name="monitoring" value="%s" />
+<input type="hidden" name="max_alerts_per_page"     value="%s" />
+        """ % (
+                    datetime.fromtimestamp(u_init_time).strftime("%Y-%m-%d %H:%M"),
+                    datetime.fromtimestamp(u_final_time).strftime("%Y-%m-%d %H:%M"),
+                    u_rule, u_srcip, u_user, u_location, u_level, USER_page, USER_searchid, USER_monitoring, ossec_conf.ossec_max_alerts_per_page
+                )
+
+        if output_list[0]['pg'] > 1:
+            buffer += """\
+&nbsp;&nbsp;
+<input type="submit" name="search" value="Next >" class="button" class="formText" />
+<input type="submit" name="search" value="Last >>" class="button"  class="formText" />
+</form>
+            """
+
+        # Checking if page exists
+        target = output_list[real_page]
+        target_file = os.environ['CCPRISM_HOME'] + target
+        if (not output_list[0][real_page]) or (len(target) < 5) or (not os.path.exists(target_file)):
+            buffer += "<b class='red'>Nothing returned (or search expired). </b><br />\n"
+
+            self.contents = buffer
+            return
+
+        buffer += "<br/><br/>"
+
+        # Printing page
+        # TODO: There are functions for slurping file contents.
+
+        fobj = open(target_file, 'r')
+
+        target_buffer = fobj.read()
+
+        fobj.close()
+
+        print(target_buffer)
+
+        buffer += target_buffer
 
         self.contents = buffer
 
