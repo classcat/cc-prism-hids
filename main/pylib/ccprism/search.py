@@ -1,3 +1,32 @@
+"""
+/**
+ * Ossec Framework
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * @category   Ossec
+ * @package    Ossec
+ * @version    $Id: Histogram.php,v 1.3 2008/03/03 15:12:18 dcid Exp $
+ * @author     Chris Abernethy
+ * @copyright  Copyright (c) 2007-2008, Daniel B. Cid <dcid@ossec.net>, All rights reserved.
+ * @license    http://www.gnu.org/licenses/gpl-3.0.txt GNU Public License
+ */
+"""
+
+##############################################################
+#  Copyright C) 2015 Masashi Okumura All rights reseerved.
+##############################################################
 
 import os,sys
 import re
@@ -38,6 +67,7 @@ class Search(View):
         self._make_contents()
         self._make_html()
 
+
     def _make_contents(self):
 
         # Starting handle
@@ -48,13 +78,14 @@ class Search(View):
         #u_final_time = int(time.mktime(datetime.now().timetuple()))
         u_init_time   = int(u_final_time  - ossec_conf.ossec_search_time) # 14400 = 3600 * 4
 
-        u_level = ossec_conf.ossec_search_level
+        u_level = ossec_conf.ossec_search_level   # 7
         u_pattern = ""
         u_rule = ""
         u_srcip = ""
         u_user = ""
         u_location = ""
 
+        # masao added the folloings :
         USER_final = 0
         USER_init = 0
         USER_level = ""
@@ -66,31 +97,61 @@ class Search(View):
         USER_rule = None
         USER_srcip = None
         USER_user = None
-
         USER_page = 1
         USER_searchid = 0
         USER_monitoring = 0
         used_stored = 0
 
+        buffer = ""
+
         # Getting search id
-        if self.is_post:
+        if self.is_post and ('searchid' in self.request.form):
             str_searchid = self.request.form.get('searchid')
             if re.search("[a-z0-9]+", str_searchid):
-                print(str_searchid)
-                USER_searchid = str_searchid # It might be hex. dont use int().
+                USER_searchid = str_searchid   # It might be hex. dont use int().
 
+        is_rt_monitoring = False
+
+        # TODO : real time monitoring t.b. implemented.
         rt_sk = ""
         sv_sk = 'checked="checked"'
-        if self.is_post:
+        if self.is_post and ('monitoring' in self.request.form):
             str_monitoring = self.request.form.get('monitoring')
-            if str_monitoring and (int(str_monitoring) == 1):
-                pass
+            if int(str_monitoring) == 1:
+                is_rt_monitoring = True
+
+                rt_sk = 'checked="checked"'
+                sv_sk = "";
+
+                # Cleaning up time
+                USER_final = u_final_time
+                USER_init = u_init_time
+                USER_monitoring = 1
+
+                # Cleaning up fields
+                # $_POST['search'] = "Search";
+                # unset($_POST['initdate']);
+                # unset($_POST['finaldate']);
+
+                # Deleting search
+                if USER_searchid != 0:
+                    os_lib_alerts.os_cleanstored(USER_searchid)
+
+                # Refreshing every 90 seconds by default */
+                m_ossec_refresh_time = ossec_conf.ossec_refresh_time * 1000;
+
+                buffer += """\
+<script language="javascript">
+    setTimeout("document.dosearch.submit()", %d);
+</script>\n""" % m_ossec_refresh_time
 
         # Reading user input -- being very careful parsing it
 
         # Initial Date
         datepattern = "^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}):([0-9]{2})$";
-        if self.is_post:
+        if is_rt_monitoring:
+            pass
+        elif self.is_post and ('initdate' in self.request.form):
             str_initdate = self.request.form.get('initdate')
             mobj = re.search(datepattern, str_initdate)
             if mobj:
@@ -106,7 +167,9 @@ class Search(View):
                 # print(datetime.fromtimestamp(u_init_time))
 
         # Final Date
-        if self.is_post:
+        if is_rt_monitoring:
+            pass
+        elif self.is_post and ('finaldate' in self.request.form):
             str_finaldate = self.request.form.get('finaldate')
             mobj = re.search(datepattern, str_finaldate)
             if mobj:
@@ -119,32 +182,116 @@ class Search(View):
                 u_final_time = USER_final
 
         # Level
-        if self.is_post:
-            level = self.request.form.get('level')
-            if level and level.isdigit() and (int(level) > 0) and (int(level) < 16):
-                USER_level = level
-                u_level = level
+        if self.is_post and ('level' in self.request.form):
+            str_level = self.request.form.get('level')
+            if str_level and str_level.isdigit() and (int(str_level) > 0) and (int(str_level) < 16):
+                USER_level = str_level
+                u_level = str_level
+
+        # Page
+        if self.is_post and ('page' in self.request.form):
+            str_page = self.request.form.get('page')
+            if str_page and str_page.isdigit() and (int(str_page) > 0) and (int(str_page) <= 999):
+                USER_page = str_page
+
+        # Pattern
+        strpattern = "^[0-9a-zA-Z. _|^!\-()?]{1,128}$"
+        intpattern = "^[0-9]{1,8}$"
+
+        if self.is_post and ('strpattern' in self.request.form):
+            str_strpattern = self.request.form.get('strpattern')
+            if re.search(strpattern, str_strpattern):
+                USER_pattern = str_strpattern
+                u_pattern = USER_pattern
+
+        # Getting location
+        if self.is_post and ('locationpattern' in self.request.form):
+            lcpattern = "^[0-9a-zA-Z. _|^!>\/\\-]{1,156}$"
+            str_locationpattern = self.request.form.get('locationpattern')
+            if re.search(lcpattern, str_locationpattern):
+                LOCATION_pattern = str_locationpattern
+                u_location = LOCATION_pattern
 
         # Group pattern
+        if self.is_post and ('grouppattern' in self.request.form):
+            str_grouppattern = self.request.form.get('grouppattern')
+            if str_grouppattern == "ALL":
+                USER_group = None
+            elif re.search(strpattern, str_grouppattern):
+                UESR_group = str_grouppattern
+            pass
+
+        # Log pattern
+        if self.is_post and ('logpattern' in self.request.form):
+            str_logpattern = self.request.form.get('logpattern')
+            if str_logpattern == "ALL":
+                USER_log = None
+            elif re.search(strpattern, str_logpattern):
+                USER_log = str_logpattern
 
         # Rule pattern
+        if self.is_post and ('rulepattern' in self.request.form):
+            str_rulepattern = self.request.form.get('rulepattern')
+            if re.search(strpattern, str_rulepattern):
+                USER_rule = str_rulepattern
+                u_rule = USER_rule
+
+        # Src ip pattern
+        if self.is_post and ('srcippattern' in self.request.form):
+            str_srcippattern = self.request.form.get('srcippattern')
+            if re.search(strpattern, str_srcippattern):
+                USER_srcip = str_srcippattern
+                u_srcip = USER_srcip
+
+        # User pattern
+        if self.is_post and ('userpattern' in self.request.form):
+            str_userpattern = self.request.form.get('userpattern')
+            if re.search(strpattern, str_userpattern):
+                USER_user = str_userpattern
+                u_user = USER_user
 
         # Maximum number of alerts
+        if self.is_post and ('max_alerts_per_page' in self.request.form):
+            str_max_alerts_per_page = self.request.form.get('max_alerts_per_page')
+            if re.search(intpattern, str_max_alerts_per_page):
+                int_max_alerts_per_page = int (str_max_alerts_per_page)
+                if (int_max_alerts_per_page > 200) and (int_max_alerts_per_page < 10000):
+                    ossec_conf.ossec_max_alerts_per_page = int_max_alerts_per_page
 
-        buffer = ""
 
         # Getting search id -- should be enough to avoid duplicates
-        if self.is_post:
-            print (request.form)
+        if is_rt_monitoring:
+            m = hashlib.md5()
+            m.update(str(uuid.uuid4()).encode('UTF-8'))
+            USER_searchid = m.hexdigest()
+            USER_page = 1
+
+        elif self.is_post and ('search' in self.request.form):
+            str_search = self.request.form.get('search')
             # ImmutableMultiDict([('initdate', '2015-07-21 15:00'), ('level', '3'), ('search', 'Search'), ('monitoring', '0'), ('finaldate', '2015-07-21 19:00'), ('searchid', '0')])
-            if 'search' in request.form:
+            if str_search == "Search":
                 # Creating new search id
                 #  (in php)       $USER_searchid = md5(uniqid(rand(), true));
                 m = hashlib.md5()
                 m.update(str(uuid.uuid4()).encode('UTF-8'))
-                print(m.hexdigest())
                 USER_searchid = m.hexdigest()
                 USER_page = 1
+
+            elif str_search == "<< First":
+                USER_page = 1
+
+            elif str_search == "< Prev":
+                if USER_page > 1:
+                    UESR_page -= 1
+
+            elif str_search ==  "Next >":
+                USER_page += 1
+
+            elif str_search == "Last >>":
+                USER_page = 999
+
+            elif str_search == "":
+                pass
 
             else:
                 buffer += "<b class='red'>Invalid search. </b><br />\n"
@@ -317,10 +464,11 @@ timeFormat     :    "24"
         output_list = None
 
         # Getting stored alerts
-        if self.is_post:
+        if self.is_post and ('search' in request.form):
+
             str_search = self.request.form.get("search")
-            print("search" + str_search)
-            if str_search != "Search":
+
+            if (not is_rt_monitoring) and (str_search != "Search"):
                 #output_list = os_getstoredalerts(ossec_handle, USER_searchied)
                 used_stored = 1
             else:

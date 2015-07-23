@@ -399,6 +399,8 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
 
         return output_file
 
+def  os_cleanstored(search_id = None):
+    pass
 
 
 def os_getalerts(ossec_handle, init_time = 0, final_time = 0, max_count = 30):
