@@ -107,13 +107,10 @@ def __os_parsealert(fobj, curr_time,
         # Rule: 5502 (level 3) -> 'Login session closed.'
         buffer = fobj.readline()
         buffer = buffer.decode('UTF-8')
-        print(buffer)
+
         tokens = buffer.split(" ")
         if len(tokens) == 1:
             continue
-
-        print(tokens[0])
-        print(tokens[1])
 
         # Rule id
         evt_id = tokens[1]
@@ -126,8 +123,7 @@ def __os_parsealert(fobj, curr_time,
 
         # Level
         evt_level = tokens[3].rstrip(')')
-        print("event : %s " %evt_level)
-        print(evt_level)
+
         if not evt_level.isdigit():
             continue
 
@@ -149,11 +145,9 @@ def __os_parsealert(fobj, curr_time,
         buffer = buffer.decode('UTF-8')
 
         if buffer[0:7] == "Src IP:":
-            print("Match !!!!")
             # run srcip code
             buffer = buffer.strip()
             evt_srcip = buffer[8:]
-            print(evt_srcip)
 
             mobj = re.match('^(\d|[01]?\d\d|2[0-4]\d|25[0-5])\.(\d|[01]?\d\d|2[0-4]\d|25[0-5])\.(\d|[01]?\d\d|2[0-4]\d|25[0-5])\.(\d|[01]?\d\d|2[0-4]\d|25[0-5])$', evt_srcip)
             # if(preg_match("^([1-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(\.([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])){3}^", $evt_srcip))
@@ -173,7 +167,6 @@ def __os_parsealert(fobj, curr_time,
         if buffer[0:5] == "User:":
             # run user code
             buffer = buffer.strip()
-            print("User matched")
             if buffer != "User: (none)":
                 evt_user = buffer[6:]
                 if evt_user == "SYSTEM":
@@ -182,27 +175,19 @@ def __os_parsealert(fobj, curr_time,
             if user_pattern:
                 pass
 
-            print("EVT_UESR is")
-            print(evt_user)
-
             buffer = fobj.readline()
             buffer = buffer.decode('UTF-8')
 
         # move on to message
 
         # message
-        print("Let's move on to msg")
-        print(buffer)
 
         msg_id = 0
         evt_msg = []
         evt_msg.append(None)
 
-        print ("EVT_MSG BEFORE")
-        print (evt_msg)
         while(len(buffer)>3):
             if buffer == "\n":
-                print("\\N found foun ############################")
                 break
 
             if (str_pattern is not None): # and ():
@@ -402,13 +387,14 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
 def  os_cleanstored(search_id = None):
     pass
 
+def os_getstoredalerts(ossec_handle, search_id):
+    pass
+
 
 def os_getalerts(ossec_handle, init_time = 0, final_time = 0, max_count = 30):
     file = ""
     alert_list = Ossec_AlertList()
     curr_time = datetime.now()
-
-    print (ossec_handle['dir'])
 
     log_file = ossec_handle['dir'] + "/logs/alerts/alerts.log"
 
@@ -428,8 +414,6 @@ def os_getalerts(ossec_handle, init_time = 0, final_time = 0, max_count = 30):
         f_point = max_count * 325
 
         #  If file size is large than the counter fseek to the average place in the file.
-        print (f_size)
-        print (f_point)
 
         if f_size > f_point:
             seek_place = f_size - f_point

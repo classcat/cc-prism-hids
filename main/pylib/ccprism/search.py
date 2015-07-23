@@ -260,7 +260,7 @@ class Search(View):
 
 
         # Getting search id -- should be enough to avoid duplicates
-        if is_rt_monitoring:
+        if is_rt_monitoring: # 'get('search')  is "Search"
             m = hashlib.md5()
             m.update(str(uuid.uuid4()).encode('UTF-8'))
             USER_searchid = m.hexdigest()
@@ -319,19 +319,16 @@ class Search(View):
         buffer += """\
         <form name="dosearch" method="post" action="/search">
         <table><tr valign="top">
-        <td><input type="radio" name="monitoring" value="0" checked="checked"/></td>
-        <td>From: &nbsp;<input type="text" name="initdate"   id="i_date_a" size="17" value="%s"  maxlength="16"  class="formText" />
-            <img src="static/img/calendar.gif" id="i_trigger" title="Date selector"  alt="Date selector" class="formText" />
-        </td><td>&nbsp;&nbsp;
-        To: &nbsp;<input type="text" name="finaldate" id="f_date_a" size="17" value="%s"  maxlength="16"  class="formText" />
-            <img src="static/img/calendar.gif" id="f_trigger" title="Date selector" alt="Date selector" class="formText" />
-        </td>
+            <td><input type="radio" name="monitoring" value="0" checked="checked"/></td>
+            <td>From: &nbsp;<input type="text" name="initdate"   id="i_date_a" size="17" value="%s"  maxlength="16"  class="formText" />
+                <img src="static/img/calendar.gif" id="i_trigger" title="Date selector"  alt="Date selector" class="formText" /></td>
+            <td>&nbsp;&nbsp;&nbsp;To: &nbsp;<input type="text" name="finaldate" id="f_date_a" size="17" value="%s"  maxlength="16"  class="formText" />
+                <img src="static/img/calendar.gif" id="f_trigger" title="Date selector" alt="Date selector" class="formText" /></td>
         </tr>
         """ % (
                     datetime.fromtimestamp(u_init_time).strftime("%Y-%m-%d %H:%M"),
                     datetime.fromtimestamp(u_final_time).strftime("%Y-%m-%d %H:%M")
                 )
-
 
 
         buffer += """<tr><td><input type="radio" name="monitoring" value="1" %s/></td>
@@ -349,7 +346,6 @@ class Search(View):
             buffer += '   <option value="1">All</option>'
 
         for l_counter in range(15, 1, -1):
-            print (l_counter)
             if l_counter == int(u_level):
                 buffer += '   <option value="%s" selected="selected">%s</option>' % (l_counter, l_counter)
             else:
@@ -357,19 +353,22 @@ class Search(View):
 
         buffer += "</select>"
 
+
         # Category
         buffer += """</td><td>
-        Category: </td><td><select name="grouppattern" class="formText">"""
+            Category: </td><td><select name="grouppattern" class="formText">"""
         buffer += '<option value="ALL" class="bluez">All categories</option>'
+
         for _cat_name, _cat in global_categories.items():
-            sl = ""
             for cat_name, cat_val  in _cat.items():
+                sl = ""
                 if cat_name.find("(all)") != -1:
                     buffer += """<option class="bluez" %s value="%s">%s</option>""" % (sl, cat_val, cat_name)
                 else:
                     buffer += """<option value="%s" %s> &nbsp; %s</option>""" % (cat_val, sl, cat_name)
 
         buffer += '</select>'
+
 
         # Str pattern
         buffer += """</td></tr><tr><td>
@@ -381,7 +380,6 @@ class Search(View):
         buffer += '<option value="ALL" class="bluez">All log formats</option>'
 
         for _cat_name, _cat in log_categories.items():
-            #print (_cat)
             for cat_name, cat_val  in _cat.items():
                 sl = ""
                 if USER_log == cat_val:
@@ -421,17 +419,18 @@ class Search(View):
             <td><input type="text" name="max_alerts_per_page" size="8" value="%s" class="formText" /></td></tr>
         """ % ossec_conf.ossec_max_alerts_per_page
 
+        # Agent
+        # seems not implemented
+
         # Final form
         buffer += """\
             <tr><td>
             <input type="submit" name="search" value="Search" class="button" />
         """
 
-        buffer += """\
-        </td></tr></table>
-     <input type="hidden" name="searchid" value="%s" />
-     </form><br /> <br />
-        """ % USER_searchid
+        buffer += """</td></tr></table>
+            <input type="hidden" name="searchid" value="%s" />
+            </form><br /> <br />""" % USER_searchid
 
         # Java script for date
         buffer += """\
@@ -464,14 +463,29 @@ timeFormat     :    "24"
         output_list = None
 
         # Getting stored alerts
-        if self.is_post and ('search' in request.form):
+        if is_rt_monitoring:
+            # Getting alerts
+            output_list = os_lib_alerts.os_searchalerts(ossec_handle,
+                                                USER_searchid,
+                                                USER_init,
+                                                USER_final,
+                                                ossec_conf.ossec_max_alerts_per_page,
+                                                USER_level,
+                                                USER_rule,
+                                                LOCATION_pattern,
+                                                USER_pattern,
+                                                USER_group,
+                                                USER_srcip,
+                                                USER_user,
+                                                USER_log)
 
+        elif self.is_post and ('search' in request.form):
             str_search = self.request.form.get("search")
 
-            if (not is_rt_monitoring) and (str_search != "Search"):
-                #output_list = os_getstoredalerts(ossec_handle, USER_searchied)
+            if str_search != "Search":
+                output_list = os_getstoredalerts(ossec_handle, USER_searchied)
                 used_stored = 1
-            else:
+            else:  # Searchiing for new ones
                 # Getting alerts
                 output_list = os_lib_alerts.os_searchalerts(ossec_handle,
                                     USER_searchid,
@@ -506,11 +520,13 @@ timeFormat     :    "24"
         if USER_page >= output_list[0]['pg']:
             USER_page = output_list[0]['pg']
 
-        # Page 1
+        # Page 1 will become the latest and the latest, page 1
+        real_page = (output_list[0]['pg'] + 1) - USER_page
 
         buffer += "<b>Total alerts found: </b>%s<br />" % output_list[0]['count']
 
-        print(output_list)
+        if output_list[0]['pg'] > 1:
+            buffer += "<b>Output divided in </b>%s pages.<br/>" % output_list[0]['pg']
 
 
         self.contents = buffer
