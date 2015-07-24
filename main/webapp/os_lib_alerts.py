@@ -15,6 +15,8 @@ from mydebug import MYDEBUG
 from Ossec.Alert import Ossec_Alert
 from Ossec.AlertList import Ossec_AlertList
 
+gcounter_alerts = 0
+
 # TODO: This can probably be a method of AlertList
 def __os_createresults(out_file, alert_list):
     # Opening output file
@@ -131,6 +133,9 @@ rc_code_hash : %s
         #mobj = re.search("^\*\*\sAlert.+", buffer)
         #if not mobj:
         #    continue
+
+        global gcounter_alerts
+        gcounter_alerts += 1
 
         # Getting event time
         evt_time = buffer[9:19]
@@ -304,49 +309,55 @@ rc_code_hash : %s
 
             if (str_pattern is not None) and (buffer.find(str_pattern) > -1):
                 pattern_matched = 1
-                pass
 
             #buffer = buffer.decode('UTF-8')
             evt_msg[msg_id] = buffer.strip().replace('<', "&lt;").replace('>', "&gt;")
 
             buffer = fobj.readline()
             buffer = buffer.decode('UTF-8')
+
             msg_id += 1
             evt_msg.append(None)
 
         # Searcing by pattern
-        #if (str_pattern is not None) and (pattern_matched == 0):
-        #    pass
+        if (str_pattern is not None) and (pattern_matched == 0) and (rc_code_hash['str_pattern']):
+            evt_srcip = None
+            evt_user = None
+            continue
+        elif (not rc_code_hash['str_pattern']) and (pattern_matched == 1):
+            evt_srcip = None
+            evt_user = None
+            continue
 
         # if we reach here, we got a full alert.
 
         alert = Ossec_Alert()
-        #alert = Ossec.Alert.Ossec_Alert()
+
         alert.time = evt_time
         alert.id = evt_id
         alert.level = evt_level
 
         #  // TODO: Why is this being done here? Can't we just use
         # // htmlspecialchars() before emitting this to the browser?
-        if evt_user is not None:
+        if evt_user:
             evt_user = evt_user.replace('<', "&lt;").replace('>', "&gt;")
         alert.user = evt_user
 
-        if evt_srcip is not None:
+        if evt_srcip:
             evt_srcip = evt_srcip.replace('<', "&lt;").replace('>', "&gt;")
         alert.srcip = evt_srcip
 
         alert.description = evt_description
         alert.location = evt_location
-        alert.msg = evt_msg  # 配列の代入はあり？
+        alert.msg = list(evt_msg)  # 配列の代入はあり？
 
         #print (line)
         #print(alert.dump())
 
         return alert
-        pass
+
     return None
-    pass
+
 
 
 def os_searchalerts(ossec_handle,
@@ -362,7 +373,7 @@ def os_searchalerts(ossec_handle,
      *  will not be returned. Passed directly to __os_parsealert.
     """
 
-    if MYDEBUG:
+    if False:
         print (">> IN os_searchalerts in os_lib_alerts.py\n")
 
         fmt_init_time  = datetime.fromtimestamp(init_time)
@@ -488,6 +499,9 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
     # Cleaning old entries
     os_cleanstored(None)
 
+    global gcounter_alerts
+    gcounter_alerts = 0
+
     # Getting first file
     init_loop = init_time
     while init_loop <= final_time:
@@ -502,11 +516,10 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
         init_loop+=86400
         file_count += 1
 
-
-    print(file_list)
-
     # Getting each file
+    print (file_list)
     for file in file_list:
+        print ("Let's check a file %s" % file)
         # If the file does not exist, it must be gzipped so switch to a
         # compressed stream for reading and try again. If that also fails,
         # abort this log file and continue on to the next one.
@@ -521,15 +534,18 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
             except Exception as e:
                 continue
 
+        mycounter = 0
         # Reading all the entries
         while True:
+            mycounter += 1
+            print (file)
             # Dont get more than max count alerts per page
             if alert_list.size() >= max_count:
                 # output_file[1]
                 # string(60) "./tmp/output-tmp.1-1000-f95606de5c49b31df3348c8001ae0ab4.php"
                 #  in python : ./tmp/output-tmp.1-1000-917f3b294dd1a044411b45813c06b58d.php
 
-                output_file[output_count] = "/tmp/output-tmp.%s-%s-%s.php" % (output_count, alert_list.size(), search_id)
+                output_file[output_count] = "/tmp/output-tmp.%s-%s-%s.py" % (output_count, alert_list.size(), search_id)
 
                 __os_createresults(output_file[output_count], alert_list)
 
@@ -549,6 +565,7 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
 
             # final time を超えると、None が返される
             if alert is None:
+                print("Let's break")
                 break
 
             if not 'count' in output_file[0]:
@@ -561,20 +578,27 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
 
         # Closing file
         if fobj:
+            print("goint to close %s" % fobj)
             fobj.close()
 
-        # Creating last entry
-        output_file[output_count] = "/tmp/output-tmp.%s-%s-%s.php" % (output_count, alert_list.size(), search_id)
-        # output_file.append("./tmp/output-tmp.%s-%s-%s.php" % (output_count, alert_list.size(), search_id))
+    print ("mycounter is %s" % mycounter)
 
-        output_file[0][output_count] = alert_list.size() - 1
-        output_file.append(None)
+    print("gcounter_alerts is %s" % gcounter_alerts)
 
-        __os_createresults(output_file[output_count], alert_list)
+    # Creating last entry
+    output_file[output_count] = "/tmp/output-tmp.%s-%s-%s.p" % (output_count, alert_list.size(), search_id)
+    # output_file.append("./tmp/output-tmp.%s-%s-%s.php" % (output_count, alert_list.size(), search_id))
 
-        output_file[0]['pg'] = output_count
+    output_file[0][output_count] = alert_list.size() - 1
+    output_file.append(None)
 
-        return output_file
+    __os_createresults(output_file[output_count], alert_list)
+
+    output_file[0]['pg'] = output_count
+
+    print(output_file)
+
+    return output_file
 
 
 """
@@ -595,7 +619,7 @@ def  os_cleanstored(search_id = None):
         pass
 
     else:
-        for file in glob.glob(os.environ["CCPRISM_HOME"] + "/tmp/*.php"):
+        for file in glob.glob(os.environ["CCPRISM_HOME"] + "/tmp/*.py"):
             if int(os.stat(file).st_mtime) < (int(time.time()) - 1800):
                 os.unlink(file)
 
