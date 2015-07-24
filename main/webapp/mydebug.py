@@ -1,0 +1,2 @@
+
+MYDEBUG = True

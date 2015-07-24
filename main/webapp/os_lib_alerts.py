@@ -6,8 +6,11 @@ import time
 import os.path
 import re
 import gzip
+import glob
 
 from collections import OrderedDict
+
+from mydebug import MYDEBUG
 
 from Ossec.Alert import Ossec_Alert
 from Ossec.AlertList import Ossec_AlertList
@@ -26,6 +29,30 @@ def __os_createresults(out_file, alert_list):
     fobj.write(alert_list.toHtml())
     fobj.close()
 
+"""
+
+ * @param string $location_pattern
+ *   String used for constraining results by location. This will be used in a
+ *   call to strpos, and may contain an initial '!' signifying negation. If
+ *   present, the '!' will be stripped and not used in the call to strpos, but
+ *   the results of the call will be negated.
+
+
+  * @param string $log_pattern
+ *   String used for constraining results by log group. This will be used in a
+ *   call to strpos.
+
+ * @param string $log_regex
+ *   String used for constraining results by log group. This will be used in a
+ *   call to preg_match.
+
+ * @param array $rc_code_hash
+ *   Array keyed on pattern variable name. Contains 'true' if pattern should be
+ *   negated, false otherwise. Valid keys are 'srcip_pattern', 'str_pattern'
+ *   'user_pattern' and 'location_pattern'.
+
+ * @return Ossec_Alert
+"""
 
 def __os_parsealert(fobj, curr_time,
                         init_time, final_time, min_level ,
@@ -37,37 +64,81 @@ def __os_parsealert(fobj, curr_time,
                         log_pattern, log_regex,
                         rc_code_hash):
 
+    if False:
+        print(">> IN __os_parsealert")
+        args = """\n
+fobj : %s
+curr_time : %s
+init_time : %s
+final_time : %s
+min_level : %s
+rule_id : %s
+location_pattern : %s
+str_pattern : %s
+group_pattern : %s
+group_regex : %s
+srcip_pattern : %s
+user_pattern : %s
+log_pattern : %s
+log_regex : %s
+rc_code_hash : %s
+""" % (fobj, curr_time, init_time, final_time, min_level, rule_id, location_pattern, str_pattern,
+            group_pattern, group_regex, srcip_pattern, user_pattern, log_pattern, log_regex, rc_code_hash
+            )
+        print(args)
+        """
+        obj : <gzip _io.BufferedReader name='/var/ossec/logs/alerts/2015/Jul/ossec-alerts-23.log.gz' 0x7f704626b198>
+        curr_time : 1437719168
+        init_time : 1437604680
+        final_time : 1437705480
+        min_level : 3
+        rule_id : /111/
+        location_pattern : loc_pattern
+        str_pattern : pattern_abc
+        group_pattern : web_scan (None)
+        group_regex : None (/connection_attempt|web_scan|recon/)
+        srcip_pattern : 192.168.0.50
+        user_pattern : root
+        log_pattern : sshd
+        log_regex : None
+        rc_code_hash : OrderedDict([('user_pattern', False), ('str_pattern', False), ('srcip_pattern', False), ('location_pattern', False)])
+
+        """
+
     evt_time = 0
     evt_id = 0
     evt_level = 0
-    evt_description = ""
-    evt_location = ""
-    evt_srcip = ""
-    evt_user = ""
-    evt_group = ""
-    #evt_msg = [""]
-    #evt_msg.append("")
+    evt_description = None
+    evt_location = None
+    evt_srcip = None
+    evt_user = None
+    evt_group = None
+    evt_msg = []
+    evt_msg.append("")
+    # php : evt_msg[0] = ""
 
     while True:
         buffer = fobj.readline()
         if not buffer:
             break
 
+        # since binary open
         buffer = buffer.decode('UTF-8')
 
-        # ** Alert
-        mobj = re.search("^\*\*\sAlert.+", buffer)
-        if not mobj:
+        # Getting event header
+        if not buffer.startswith("** Alert"):
             continue
+        #mobj = re.search("^\*\*\sAlert.+", buffer)
+        #if not mobj:
+        #    continue
 
         # Getting event time
         evt_time = buffer[9:19]
-        if not evt_time.isdigit():
+        if evt_time.isdigit():
+            evt_time = int(evt_time)
+        else:
             evt_time = 0
             continue
-
-        #print(">>>>" + evt_time)
-        evt_time = int(evt_time)
 
         # Checking if event time is in the timeframe
         if (init_time != 0) and (evt_time < init_time):
@@ -77,36 +148,58 @@ def __os_parsealert(fobj, curr_time,
             return None
 
         pos = buffer.find("-")
-        if pos < 0 :
+        if pos == -1:
             # Invalid Group
             continue
-        #else:
-        #    buffer[pos:]
+        else:
+            evt_group = buffer[pos:]
+
+        #  buffer : ** Alert 1437663586.8449575: - pam,syslog,authentication_success,
+        # evt_group : - pam,syslog,authentication_success,
 
         # Filtering baesd on the group
         if group_pattern is not None:
-            pass
+            if evt_group.find (group_pattern) == -1:
+                continue
         elif group_regex is not None:
-            pass
+            if not re.search(group_regex.strip("/"), evt_group):
+                continue
 
         # Getting log formats
         if log_pattern is not None:
-            pass
+            if evt_group.find(log_pattern) == -1:
+                continue
         elif log_regex is not None:
-            pass
+            if not re.search(log_regex.strip("/"), evt_group):
+                continue
 
         # Getting location
+        # 2015 Jul 23 23:59:46 mikoto->/var/log/auth.log
         buffer = fobj.readline()
         buffer = buffer.decode('UTF-8')
+
         evt_location = buffer[21:]
 
         if location_pattern:
-            pass
+            if evt_location.find(location_pattern) == -1:
+                if not rc_code_hash['location_pattern']:
+                    continue
+            else:
+                if rc_code_hash['location_pattern']:
+                    continue
 
         # Getting rule, level and descriptioni
         # Rule: 5502 (level 3) -> 'Login session closed.'
         buffer = fobj.readline()
         buffer = buffer.decode('UTF-8')
+
+        # Rule: 5501 (level 3) -> 'Login session opened.'
+        # tokens[0] Rule:
+        # tokesn[1] 5501
+        # tokens[2] (level
+        # tokens[3] 3)
+        # tokens[4] ->
+        # tokens[5] 'Login session opened.'
 
         tokens = buffer.split(" ")
         if len(tokens) == 1:
@@ -119,7 +212,8 @@ def __os_parsealert(fobj, curr_time,
 
         # Checking rule id
         if rule_id is not None:
-            pass
+            if not re.search(rule_id.strip("/"), evt_id):
+                continue
 
         # Level
         evt_level = tokens[3].rstrip(')')
@@ -158,7 +252,12 @@ def __os_parsealert(fobj, curr_time,
                 evt_srcip = '(none)'
 
             if srcip_pattern is not None:
-                pass
+                if evt_srcip.find(srcip_pattern) == -1:
+                    if not rc_code_hash['srcip_pattern']:
+                        continue
+                else:
+                    if rc_code_hash['srcip_pattern']:
+                        continue
 
             # read line to buffer
             buffer = fobj.readline()
@@ -173,6 +272,12 @@ def __os_parsealert(fobj, curr_time,
                     evt_user = None
 
             if user_pattern:
+                if (evt_user is None) or (evt_user.find(user_pattern) == -1):
+                    if not rc_code_hash['user_pattern']:
+                        continue
+                else:
+                    if rc_code_hash['user_pattern']:
+                        continue
                 pass
 
             buffer = fobj.readline()
@@ -181,16 +286,24 @@ def __os_parsealert(fobj, curr_time,
         # move on to message
 
         # message
+        # 宣言済み
+        #    evt_msg = []
+        #    evt_msg.append("")
 
         msg_id = 0
-        evt_msg = []
-        evt_msg.append(None)
+        #evt_msg = []
+        #evt_msg.append(None)
+        evt_msg[msg_id] = None
+
+        # masao added :
+        pattern_matched = 0
 
         while(len(buffer)>3):
             if buffer == "\n":
                 break
 
-            if (str_pattern is not None): # and ():
+            if (str_pattern is not None) and (buffer.find(str_pattern) > -1):
+                pattern_matched = 1
                 pass
 
             #buffer = buffer.decode('UTF-8')
@@ -202,8 +315,8 @@ def __os_parsealert(fobj, curr_time,
             evt_msg.append(None)
 
         # Searcing by pattern
-        if (str_pattern is not None) and (pattern_matched == 0):
-            pass
+        #if (str_pattern is not None) and (pattern_matched == 0):
+        #    pass
 
         # if we reach here, we got a full alert.
 
@@ -215,10 +328,12 @@ def __os_parsealert(fobj, curr_time,
 
         #  // TODO: Why is this being done here? Can't we just use
         # // htmlspecialchars() before emitting this to the browser?
-        evt_user = evt_user.replace('<', "&lt;").replace('>', "&gt;")
+        if evt_user is not None:
+            evt_user = evt_user.replace('<', "&lt;").replace('>', "&gt;")
         alert.user = evt_user
 
-        evt_srcip = evt_srcip.replace('<', "&lt;").replace('>', "&gt;")
+        if evt_srcip is not None:
+            evt_srcip = evt_srcip.replace('<', "&lt;").replace('>', "&gt;")
         alert.srcip = evt_srcip
 
         alert.description = evt_description
@@ -236,24 +351,59 @@ def __os_parsealert(fobj, curr_time,
 
 def os_searchalerts(ossec_handle,
                         search_id,
-                         init_time,
-                         final_time,
-                         max_count,
-                         min_level,
-                         rule_id,
-                         location_pattern,
-                         str_pattern,
-                         group_pattern,
-                         srcip_pattern,
-                         user_pattern,
-                         log_pattern)  :
+                         init_time,   final_time,
+                         max_count = 1000,  min_level = 7,   rule_id = None,
+                         location_pattern = None,  str_pattern = None,  group_pattern = None,
+                         srcip_pattern = None,   user_pattern = None,  log_pattern = None)  :
 
+    """
+     *  @param integer $min_level
+     *  Used to constrain events by level. Events with levels lower than this value
+     *  will not be returned. Passed directly to __os_parsealert.
+    """
+
+    if MYDEBUG:
+        print (">> IN os_searchalerts in os_lib_alerts.py\n")
+
+        fmt_init_time  = datetime.fromtimestamp(init_time)
+        fmt_final_time = datetime.fromtimestamp(final_time)
+        in_args = """\
+init_time : %s
+final_time : %s
+max_count : %s
+min_level : %s
+rule_id : %s
+location_pattern %s
+str_pattern : %s
+group_pattern : %s
+srcip_pattern : %s
+user_pattern : %s
+log_pattern : %s
+""" % (fmt_init_time, fmt_final_time, max_count, min_level, rule_id, location_pattern,
+            str_pattern, group_pattern, srcip_pattern, user_pattern, log_pattern)
+
+        print (in_args)
+
+        """
+        init_time : 2015-07-23 07:38:00
+        final_time : 2015-07-24 11:38:00
+        max_count : 5000
+        min_level : 3
+        rule_id : 111
+        location_pattern loc_pattern
+        str_pattern : pattern_abc
+        group_pattern : web_scan
+        srcip_pattern : 192.168.0.50
+        user_pattern : root
+        log_pattern : sshd
+        """
 
     alert_list = Ossec_AlertList()
 
     file_count = 0
     file_list = []
     #file_list[0] = ""
+    #     $file_list[0] = array();
 
     """
 output_file[0]
@@ -288,16 +438,55 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
 
     curr_time = int(time.time())
 
+    # added by masao
+    rc_code_hash = OrderedDict()
+
+    # Clearing arguments
+    if rule_id is not None:
+        rule_id = "/%s/" % rule_id
+
     group_regex = None
+    if (group_pattern is not None) and (group_pattern.find("|") != -1):
+        group_regex = "/%s/" % group_pattern
+        group_pattern = None
 
     log_regex = None
+    if (log_pattern is not None) and (log_pattern.find("|") != -1):
+        log_regex = "/%s/" % log_pattern
+        log_pattern = None
 
     # Setting rc code
-    rc_code_hash = None
+    if (user_pattern is not None) and user_pattern and (user_pattern[0] == '!'):
+        user_pattern = user_pattern[1:]
+        rc_code_hash['user_pattern'] = True
+    else:
+        rc_code_hash['user_pattern'] = False
+
+    # str
+    if (str_pattern is not None) and str_pattern and (str_pattern[0] == '!'):
+        str_pattern = str_pattern[1:]
+        rc_code_hash['str_pattern'] = True #  TODO : True?
+        # rc_code_hash['str_pattern'] = False #  TODO : True?
+    else:
+        rc_code_hash['str_pattern'] = False
+        # rc_code_hash['str_pattern'] = True
 
     # srcip
+    if (srcip_pattern is not None) and srcip_pattern and (srcip_pattern[0] == '!'):
+        srcip_pattern = srcip_pattern[1:]
+        rc_code_hash['srcip_pattern'] = True
+    else:
+        rc_code_hash['srcip_pattern'] = False
 
     # location
+    if (location_pattern is not None) and location_pattern and (location_pattern[0] == '!'):
+        location_pattern = location_pattern[1:]
+        rc_code_hash['location_pattern'] = True
+    else:
+        rc_code_hash['location_pattern'] = False
+
+    # Cleaning old entries
+    os_cleanstored(None)
 
     # Getting first file
     init_loop = init_time
@@ -312,11 +501,12 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
         # Adding one day
         init_loop+=86400
         file_count += 1
-        pass
+
+
+    print(file_list)
 
     # Getting each file
     for file in file_list:
-        #print (file)
         # If the file does not exist, it must be gzipped so switch to a
         # compressed stream for reading and try again. If that also fails,
         # abort this log file and continue on to the next one.
@@ -357,6 +547,7 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
                                      log_pattern, log_regex,
                                      rc_code_hash);
 
+            # final time を超えると、None が返される
             if alert is None:
                 break
 
@@ -368,6 +559,7 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
             # Adding alert
             alert_list.addAlert(alert)
 
+        # Closing file
         if fobj:
             fobj.close()
 
@@ -384,10 +576,33 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
 
         return output_file
 
+
+"""
+ * Clean out stored search result files. If a search ID is given, all result
+ * files for that search ID will be unlinked. If the given search ID is NULL,
+ * all temporary files older than 30 minutes will be deleted.
+ *
+ * @param String $search_id
+ *   A randomly-generated unique search ID or NULL.
+ """
 def  os_cleanstored(search_id = None):
+
+    #if (MYDEBUG):
+    #    print(">> IN os_cleanstored")
+    #    print(os.environ["CCPRISM_HOME"])
+
+    if search_id is not None:
+        pass
+
+    else:
+        for file in glob.glob(os.environ["CCPRISM_HOME"] + "/tmp/*.php"):
+            if int(os.stat(file).st_mtime) < (int(time.time()) - 1800):
+                os.unlink(file)
+
+
     pass
 
-def os_getstoredalerts(ossec_handle, search_id):
+def os_getstoredalerts(ossec_handle, search_i):
     pass
 
 

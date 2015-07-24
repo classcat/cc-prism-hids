@@ -218,7 +218,7 @@ class Search(View):
             if str_grouppattern == "ALL":
                 USER_group = None
             elif re.search(strpattern, str_grouppattern):
-                UESR_group = str_grouppattern
+                USER_group = str_grouppattern
             pass
 
         # Log pattern
@@ -362,6 +362,8 @@ class Search(View):
         for _cat_name, _cat in global_categories.items():
             for cat_name, cat_val  in _cat.items():
                 sl = ""
+                if USER_group == cat_val:
+                    sl = ' selected="selected"'
                 if cat_name.find("(all)") != -1:
                     buffer += """<option class="bluez" %s value="%s">%s</option>""" % (sl, cat_val, cat_name)
                 else:
@@ -583,8 +585,6 @@ timeFormat     :    "24"
         target_buffer = fobj.read()
 
         fobj.close()
-
-        print(target_buffer)
 
         buffer += target_buffer
 
