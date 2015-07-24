@@ -21,6 +21,7 @@ gcounter_alerts = 0
 def __os_createresults(out_file, alert_list):
     # Opening output file
     myhome  = os.environ['CCPRISM_HOME']
+
     mytmpdir = myhome + "/tmp"
     if not os.path.exists(mytmpdir):
         os.mkdir (mytmpdir)
@@ -517,7 +518,6 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
         file_count += 1
 
     # Getting each file
-    print (file_list)
     for file in file_list:
         print ("Let's check a file %s" % file)
         # If the file does not exist, it must be gzipped so switch to a
@@ -534,18 +534,16 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
             except Exception as e:
                 continue
 
-        mycounter = 0
         # Reading all the entries
         while True:
-            mycounter += 1
-            print (file)
             # Dont get more than max count alerts per page
             if alert_list.size() >= max_count:
                 # output_file[1]
                 # string(60) "./tmp/output-tmp.1-1000-f95606de5c49b31df3348c8001ae0ab4.php"
                 #  in python : ./tmp/output-tmp.1-1000-917f3b294dd1a044411b45813c06b58d.php
 
-                output_file[output_count] = "/tmp/output-tmp.%s-%s-%s.py" % (output_count, alert_list.size(), search_id)
+                output_file[output_count] = "/tmp/output-tmp.%03d-%s-%s.py" % (output_count, alert_list.size(), search_id)
+                #output_file[output_count] = "/tmp/output-tmp.%s-%s-%s.py" % (output_count, alert_list.size(), search_id)
 
                 __os_createresults(output_file[output_count], alert_list)
 
@@ -581,12 +579,12 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
             print("goint to close %s" % fobj)
             fobj.close()
 
-    print ("mycounter is %s" % mycounter)
-
     print("gcounter_alerts is %s" % gcounter_alerts)
 
     # Creating last entry
-    output_file[output_count] = "/tmp/output-tmp.%s-%s-%s.p" % (output_count, alert_list.size(), search_id)
+    output_file[output_count] = "/tmp/output-tmp.%03d-%s-%s.py" % (output_count, alert_list.size(), search_id)
+    #output_file[output_count] = "/tmp/output-tmp.%s-%s-%s.py" % (output_count, alert_list.size(), search_id)
+
     # output_file.append("./tmp/output-tmp.%s-%s-%s.php" % (output_count, alert_list.size(), search_id))
 
     output_file[0][output_count] = alert_list.size() - 1
@@ -626,8 +624,52 @@ def  os_cleanstored(search_id = None):
 
     pass
 
-def os_getstoredalerts(ossec_handle, search_i):
-    pass
+
+def os_getstoredalerts(ossec_handle, search_id):
+
+    output_file = []
+    output_file.append(OrderedDict())
+    output_file[0]['count'] = 0
+    output_file.append(None)
+
+    output_count = 1
+
+    # Cleaining old entries
+    os_cleanstored(None)
+
+    filepattern = "\/tmp\/output-tmp\.(\d{1,3})-(\d{1,6})-[a-z0-9]+\.py$"
+
+    target_files = "%s/tmp/output-tmp.*-*-%s.py" % (os.environ['CCPRISM_HOME'], search_id)
+
+    for filename in sorted(glob.glob(target_files)):
+        str_page_n = ""
+        page_n = 0
+        alert_count = 0
+
+        regs = re.search(filepattern, filename)
+        if regs:
+            str_page_n = regs.group(1)
+            page_n = int(regs.group(1))
+            alert_count = int(regs.group(2))
+        else:
+            continue
+
+        if (page_n >= 1) and (page_n < 512):
+            output_file[page_n] = "/tmp/output-tmp.%s-%s-%s.py" % (str_page_n, alert_count, search_id)
+            #  output_file[page_n] = filename
+            output_file[0][page_n] = alert_count
+
+            #output_file[page_n+1] = None
+            output_file.append(None)
+            output_file[0]['count'] += alert_count
+
+            output_count += 1
+
+    output_file[0]['pg'] = output_count - 1
+
+    print(output_file)
+
+    return output_file
 
 
 def os_getalerts(ossec_handle, init_time = 0, final_time = 0, max_count = 30):

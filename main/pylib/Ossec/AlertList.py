@@ -33,6 +33,8 @@
 
 #from collections import OrderedDict
 
+from datetime import *
+
 from .Histogram import Ossec_Histogram
 
 class Ossec_AlertList(object):
@@ -82,5 +84,23 @@ class Ossec_AlertList(object):
 
 
     def toHtml(self):
-        buf = "nyanayu"
-        return buf
+        buffer = ""
+
+        first = self.earliest()
+        print(first)
+        print(first.time)
+        first = datetime.fromtimestamp(int(first.time)).strftime("%m/%d/%Y %H:%M:%S")
+        print(first)
+
+        buffer += """<div id="alert_list_nav">"""
+
+        buffer += "</div>"
+
+        buffer += """
+<table width="100%%">
+<tr><td><b>First event</b> at <a href="#lt">%s</a></td></tr>
+<tr><td><b>Last event</b> at <a href="#ft">last </a></td></tr>
+</table>
+<br />""" % first
+
+        return buffer
