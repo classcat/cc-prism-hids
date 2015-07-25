@@ -120,6 +120,21 @@ def search():
     ccsearch = Search(request)
     return ccsearch.getHtml()
 
+
+###########
+### Stats ###
+###########
+
+@app.route("/stats", methods = ['GET', 'POST'])
+def stats():
+    from ccprism.stats import Stats
+
+    ccstats = Stats(request)
+    return ccstats.getHtml()
+    
+
+###
+
 @app.context_processor
 def example():
     return dict(myexample='This is an example')
