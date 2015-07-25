@@ -281,7 +281,7 @@ class Search(View):
                 USER_page = 1
 
             elif str_search == "< Prev":
-                if USER_page > 1:
+                if int(USER_page) > 1:
                     UESR_page = int(USER_page) - 1
 
             elif str_search ==  "Next >":
@@ -519,7 +519,7 @@ timeFormat     :    "24"
             return
 
         # Checking maximum page size
-        if USER_page >= output_list[0]['pg']:
+        if int(USER_page) >= int(output_list[0]['pg']):
             USER_page = output_list[0]['pg']
 
         # Page 1 will become the latest and the latest, page 1
@@ -569,8 +569,19 @@ timeFormat     :    "24"
         # Checking if page exists
         target = output_list[real_page]
         target_file = os.environ['CCPRISM_HOME'] + target
-        if (not output_list[0][real_page]) or (len(target) < 5) or (not os.path.exists(target_file)):
-            buffer += "<b class='red'>Nothing returned (or search expired). </b><br />\n"
+        print("real_page is %s" %real_page)
+        print("target_file is " + target_file)
+        print(output_list[0].keys())
+        if 'count' in output_list[0].keys():
+            print("count key exists.")
+        if 'pg' in output_list[0].keys():
+            print ('pg key exists')
+        if real_page in output_list[0].keys():
+            print("real_page key exists.")
+        if (not real_page in  output_list[0].keys()) or (len(target) < 5) or (not os.path.exists(target_file)):
+        #if (not output_list[0][real_page]) or (len(target) < 5) or (not os.path.exists(target_file)):
+            print("heyheyhey")
+            buffer += "<b class='red'>Nothing returned (or search expired). (* 1)</b><br />\n"
 
             self.contents = buffer
             return

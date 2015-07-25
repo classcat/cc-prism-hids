@@ -87,20 +87,46 @@ class Ossec_AlertList(object):
         buffer = ""
 
         first = self.earliest()
-        print(first)
-        print(first.time)
         first = datetime.fromtimestamp(int(first.time)).strftime("%m/%d/%Y %H:%M:%S")
-        print(first)
+
+        last = self.latest()
+        last = datetime.fromtimestamp(int(last.time)).strftime("%m/%d/%Y %H:%M:%S")
 
         buffer += """<div id="alert_list_nav">"""
 
+        buffer += self._tallyNav(self._level_histogram, 'level', 'severity', '+Severity breakdown')
+        buffer += self._tallyNav(self._id_histogram, 'id', 'rule', '+Rules breakdown')
+
         buffer += "</div>"
+        buffer += "<br/>"
 
         buffer += """
 <table width="100%%">
 <tr><td><b>First event</b> at <a href="#lt">%s</a></td></tr>
-<tr><td><b>Last event</b> at <a href="#ft">last </a></td></tr>
+<tr><td><b>Last event</b> at <a href="#ft">%s</a></td></tr>
 </table>
-<br />""" % first
+<br />""" % (first, last)
+
+        buffer += """\
+        <h2>Alert list</h2>
+        <div id="alert_list_content">
+            <a name="ft" ></a>
+        """
+
+        for alert in reversed(self._alerts):
+            buffer += alert.toHtml()
+
+        buffer += """\
+                    <a name="lt" ></a>
+        </div>
+        """
+
 
         return buffer
+
+
+    def _tallyNav(self, histogram, key, description, title):
+        buffer = ""
+
+        return buffer
+        pass
