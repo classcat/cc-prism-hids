@@ -321,14 +321,15 @@ rc_code_hash : %s
             evt_msg.append(None)
 
         # Searcing by pattern
-        if (str_pattern is not None) and (pattern_matched == 0) and (rc_code_hash['str_pattern']):
-            evt_srcip = None
-            evt_user = None
-            continue
-        elif (not rc_code_hash['str_pattern']) and (pattern_matched == 1):
-            evt_srcip = None
-            evt_user = None
-            continue
+        if rc_code_hash is not None:
+            if (str_pattern is not None) and (pattern_matched == 0) and (rc_code_hash['str_pattern']):
+                evt_srcip = None
+                evt_user = None
+                continue
+            elif (not rc_code_hash['str_pattern']) and (pattern_matched == 1):
+                evt_srcip = None
+                evt_user = None
+                continue 
 
         # if we reach here, we got a full alert.
 
