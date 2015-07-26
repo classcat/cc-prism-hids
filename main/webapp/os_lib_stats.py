@@ -103,8 +103,11 @@ def __os_parsestats(fobj, month_hash):
     month_hash['firewall'] += daily_hash['firewall']
     month_hash['syscheck'] += daily_hash['syscheck']
 
-    print (daily_hash)
+    print ("-vvvvvvvvvvvvvvvvv")
+    print(month_hash['total'])
+
     return (daily_hash)
+
 
 def os_getstats(ossec_handle, init_time, final_time):
     stats_list = OrderedDict()
@@ -130,16 +133,16 @@ def os_getstats(ossec_handle, init_time, final_time):
 
         l_year_month = datetime.fromtimestamp(init_loop).strftime("%Y/%b")
         l_day = datetime.fromtimestamp(init_loop).strftime("%d")
+        # print(">>>>>" + l_day)
 
-        print ("---")
-        print (l_year_month)
-        print (l_day)
-
+        # ここでは、0 でのパディングが必要
         file = "stats/totals/%s/ossec-totals-%s.log" % (l_year_month, l_day)
 
-        log_file = ossec_handle['dir'] + "/" + file
+        print(file)
 
-        print(log_file)
+        l_day = str(int(l_day))  # これ、重要、padding をはずして、文字列に
+
+        log_file = ossec_handle['dir'] + "/" + file
 
         # Adding one day
         init_loop += 86400
@@ -154,27 +157,22 @@ def os_getstats(ossec_handle, init_time, final_time):
                 continue
 
             stats_hash = __os_parsestats(fobj, month_hash)
-            print ("### stats hash ###")
-            print (stats_hash)
 
             if stats_hash['total'] != 0:
                 if not l_year_month in stats_list.keys():
                     stats_list[l_year_month] = OrderedDict()
                 stats_list[l_year_month][l_day] = stats_hash
 
-            print("### month_hash ###")
-            print(month_hash)
-
             if fobj:
                 fobj.close()
 
-        # Monthly hash goes to day 0
-        if not l_year_month in stats_list.keys():
-            stats_list[l_year_month] = OrderedDict()
-        stats_list[l_year_month][0] = month_hash
+    # Monthly hash goes to day 0
+    if not l_year_month in stats_list.keys():
+        stats_list[l_year_month] = OrderedDict()
+    stats_list[l_year_month]["0"] = month_hash
 
-        print(stats_list)
+    print(stats_list)
 
-        return (stats_list)
+    return (stats_list)
 
     pass

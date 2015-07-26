@@ -94,20 +94,45 @@ class Stats(View):
         USER_year = None
 
         if is_post and ('day' in form):
-            pass
+            strday = form.get('day')
+            if strday.isdigit():
+                if (int(strday) >= 0) and (int(strday) <=31 ):
+                    USER_day = strday
+                    # USER_day = "%02d" % int(strday)  # TODO : キーをどうするか
+                    print (USER_day)
 
         if is_post and ('month' in form):
-            pass
+            strmonth = form.get('month')
+            if strmonth.isdigit():
+                if (int(strmonth) > 0) and (int(strmonth) <=12):
+                    USER_month = strmonth
 
         if is_post and ('year' in form):
-            pass
+            stryear = form.get('year')
+            if stryear.isdigit():
+                if (int(stryear) >= 1) and (int(stryear) <= 3000):
+                    USER_year = stryear
 
         init_time = 0
         final_time = 0
 
         # Bulding stat time_stamp
-        if USER_year and USER_month and USER_day:
-            pass
+        if (USER_year is not None) and (USER_month is not None) and (USER_day is not None):
+            print ("UESR_day is %s" % USER_day)
+            # Stat for whole month
+            if int(USER_day) == 0:
+                print ("OKOK")
+                init_time = int(time.mktime((int(USER_year), int(USER_month), 1, 0, 0, 0, 0, 0, -1)))
+                final_time = int(time.mktime((int(USER_year), int(USER_month) + 1, 0, 0, 0, 0, 0, 0, -1)))
+                # 2015-12-01 00:00:00
+                # 2015-12-31 00:00:00
+                # print(datetime.fromtimestamp(init_time))
+                # print(datetime.fromtimestamp(final_time))
+
+            else:
+                init_time = int(time.mktime((int(USER_year), int(USER_month), int(USER_day), 0, 0, 0, 0, 0, -1)))
+                final_time = int(time.mktime((int(USER_year), int(USER_month), int(USER_day), 0, 0, 10, 0, 0, -1)))
+
         else:
             init_time = curr_time - 1
             final_time = curr_time
@@ -176,25 +201,39 @@ Day:  <select name="day" class="formSelect">
         # Getting daily stats
         # 2015/Jul
         l_year_month = datetime.fromtimestamp(init_time).strftime("%Y/%b")
-        print(l_year_month)
-        print(init_time)
+
+        print ("INIT_TIME")
+        print (init_time)
         print(final_time)
+        print (datetime.fromtimestamp(init_time).strftime("%Y/%m/%d %H:%M:%S"))
+        print (datetime.fromtimestamp(final_time).strftime("%Y/%m/%d %H:%M:%S"))
+        """
+        1435676400
+1438268400
+2015/07/01 00:00:00
+2015/07/31 00:00:00
+
+        """
+
 
         stats_list = os_lib_stats.os_getstats(ossec_handle, init_time, final_time)
 
-        print("IN STATS.PY")
+        print ("stats_list")
         print (stats_list)
+        print ("USER_day %s"  % USER_day)
 
         daily_stats = OrderedDict()
         all_stats = None
 
         if l_year_month in stats_list.keys():
-            if USER_day in stats_list[l_year_month].keys():
-                daily_stats = stats_list[l_year_month][USER_day]
+            for k in stats_list[l_year_month].keys():
+                print ("key is : %s" %k)
+            if str(USER_day) in stats_list[l_year_month].keys():
+                print ("found ")
+                daily_stats = stats_list[l_year_month][str(USER_day)]
                 all_stats = stats_list[l_year_month]
 
-        print ("#### daily stats ##### in stats.py")
-        print(daily_stats)
+        print (daily_stats)
 
         if not 'total' in daily_stats.keys():
             buffer += """<br/>
@@ -245,8 +284,6 @@ Day:  <select name="day" class="formSelect">
 
         """
 
-        print ("---")
-        print (daily_stats)
         #sorted_daily_stats_level = None  # OrderedDict()
 
         odd_count = 0
@@ -353,11 +390,27 @@ Day:  <select name="day" class="formSelect">
 </td></tr></table>
         """
 
-        print(USER_day)
         # Monthly stats
-        if USER_day == 0:
-            pass
+        if int(USER_day) == 0:
+            buffer += """
+                    <br /><br />
+        <table align="center" summary="Total by day">
+        <caption><strong>Total values per Day</strong></caption>
+        <tr>
+        <th>Day</th>
+        <th>Alerts</th>
+        <th>Alerts %</th>
+        <th>Syscheck</th>
+        <th>Syscheck %</th>
+        <th>Firewall</th>
+        <th>Firewall %</th>
+        <th>Total</th>
+        <th>Total %</th>
+        </tr>
 
+            """
+
+        # Daily stats
         else:
             buffer += """
                     <br /><br />
