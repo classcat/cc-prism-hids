@@ -353,7 +353,91 @@ Day:  <select name="day" class="formSelect">
 </td></tr></table>
         """
 
+        print(USER_day)
         # Monthly stats
+        if USER_day == 0:
+            pass
+
+        else:
+            buffer += """
+                    <br /><br />
+        <table align="center" summary="Total by hour">
+        <caption><strong>Total values per hour</strong></caption>
+        <tr>
+        <th>Hour</th>
+        <th>Alerts</th>
+        <th>Alerts %</th>
+        <th>Syscheck</th>
+        <th>Syscheck %</th>
+        <th>Firewall</th>
+        <th>Firewall %</th>
+        <th>Total</th>
+        <th>Total %</th>
+        </tr>
+            """
+
+            odd_count = 0
+            odd_msg = ""
+
+            for i in range(0, 24):
+                print ("let's go")
+                if 'total_by_hour' in daily_stats.keys():
+                    print ("OK")
+                    print(daily_stats['total_by_hour'].keys())
+                    if str(i) in daily_stats['total_by_hour'].keys():
+                        pass
+                    else:
+                        print ("not found")
+                        continue
+                else:
+                    continue
+
+                print(" got it ?")
+
+                hour_total = int(daily_stats['total_by_hour'][str(i)])
+                hour_alerts = int(daily_stats['alerts_by_hour'][str(i)])
+                hour_syscheck = int(daily_stats['syscheck_by_hour'][str(i)])
+                hour_firewall = int(daily_stats['firewall_by_hour'][str(i)])
+
+                total_pct = (hour_total*100)/max(daily_stats['total'], 1)
+                alerts_pct = (hour_alerts*100)/max(daily_stats['alerts'], 1)
+                syscheck_pct = (hour_syscheck*100)/max(daily_stats['syscheck'], 1)
+                firewall_pct = (hour_firewall*100)/max(daily_stats['firewall'], 1)
+
+
+                if (odd_count % 2) == 0:
+                    odd_msg = ' class="odd"'
+                else:
+                    odd_msg = ""
+
+                odd_count += 1
+
+                buffer += """
+            <tr.$odd_msg>
+            <td>Hour %s</td>
+            <td>%s</td>
+            <td>%s %%</td>
+
+            <td>%s</td>
+            <td>%s %%</td>
+
+            <td>%s</td>
+            <td>%s %%</td>
+
+            <td>%s</td>
+            <td>%s %%</td>
+            </tr>
+                """ % (i,
+                            format_decimal(hour_alerts, locale='en_US'), "%.01f" % alerts_pct,
+                            format_decimal(hour_syscheck, locale='en_US'), "%.01f" % syscheck_pct,
+                            format_decimal(hour_firewall, locale='en_US'), "%.01f" % firewall_pct,
+                            format_decimal(hour_total, locale='en_US'), "%.01f" % total_pct
+                        )
+
+
+
+
+        buffer += "</table></div>"
 
         self.contents = buffer
 
