@@ -156,9 +156,11 @@ def os_getstats(ossec_handle, init_time, final_time):
             stats_hash = __os_parsestats(fobj, month_hash)
             print ("### stats hash ###")
             print (stats_hash)
-            #if stats_hash['total'] != 0:
 
-            #    stats_list[l_year_month][l_day] = statsh_hash
+            if stats_hash['total'] != 0:
+                if not l_year_month in stats_list.keys():
+                    stats_list[l_year_month] = OrderedDict()
+                stats_list[l_year_month][l_day] = stats_hash
 
             print("### month_hash ###")
             print(month_hash)
@@ -166,7 +168,13 @@ def os_getstats(ossec_handle, init_time, final_time):
             if fobj:
                 fobj.close()
 
+        # Monthly hash goes to day 0
+        if not l_year_month in stats_list.keys():
+            stats_list[l_year_month] = OrderedDict()
+        stats_list[l_year_month][0] = month_hash
 
         print(stats_list)
+
+        return (stats_list)
 
     pass

@@ -15,6 +15,7 @@
 """
 
 import os,sys
+import locale
 
 from flask import Flask, session, request, redirect, render_template, url_for
 from flask import jsonify, make_response
@@ -131,7 +132,7 @@ def stats():
 
     ccstats = Stats(request)
     return ccstats.getHtml()
-    
+
 
 ###
 
@@ -153,6 +154,11 @@ def utility_processor():
 if __name__ == "__main__":
     ccprism_home = os.environ['CCPRISM_HOME']
     sys.path.insert(0, ccprism_home + "/main/pylib")
+
+    #print(locale.getlocale())
+    #locale.setlocale(locale.LC_ALL, "")
+    #print(locale.getlocale())
+    #locale.setlocale(locale.LC_ALL, "")
 
     print("main scritpt : " + os.getcwd())
 
