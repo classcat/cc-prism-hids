@@ -410,6 +410,54 @@ Day:  <select name="day" class="formSelect">
 
             """
 
+            odd_count = 0
+            odd_msg = ""
+
+            for i in range(1, 32):
+                # key は string であり、0 padding されていない
+                if (str(i) in all_stats.keys()) and ('total' in all_stats[str(i)].keys()):
+                    pass
+                else:
+                    continue
+
+                d_total = int(all_stats[str(i)]['total'])
+                d_alerts = int(all_stats[str(i)]['alerts'])
+                d_syscheck = int(all_stats[str(i)]['syscheck'])
+                d_firewall = int(all_stats[str(i)]['firewall'])
+
+                total_pct = "%.01f" % (d_total*100/max(int(daily_stats['total']), 1))
+                alerts_pct = "%.01f" % (d_alerts*100/max(int(daily_stats['alerts']), 1))
+                syscheck_pct = "%.01f" % (d_syscheck*100/max(int(daily_stats['syscheck']), 1))
+                firewall_pct = "%.01f" % (d_firewall*100/max(int(daily_stats['firewall']), 1))
+
+                if (odd_count % 2) == 0:
+                    odd_msg = ' class="odd"'
+                else:
+                    odd_msg = ""
+
+                odd_count += 1
+
+                buffer += """
+            <tr %s>
+            <td>Day %s</td>
+            <td>%s</td>
+            <td>%s %%</td>
+            <td>%s</td>
+            <td>%s %%</td>
+            <td>%s</td>
+            <td>%s %%</td>
+            <td>%s</td>
+            <td>%s %%</td>
+
+            </tr>
+                """ % (odd_msg, i,
+                                format_decimal(d_alerts, locale='en_US'), alerts_pct,
+                                format_decimal(d_syscheck, locale='en_US'), syscheck_pct,
+                                format_decimal(d_firewall, locale='en_US'), firewall_pct,
+                                format_decimal(d_total, locale='en_US'), total_pct
+
+                                )
+
         # Daily stats
         else:
             buffer += """
@@ -433,7 +481,6 @@ Day:  <select name="day" class="formSelect">
             odd_msg = ""
 
             for i in range(0, 24):
-                print ("let's go")
                 if 'total_by_hour' in daily_stats.keys():
                     print ("OK")
                     print(daily_stats['total_by_hour'].keys())
