@@ -27,8 +27,8 @@ app.config['SECRET_KEY'] = 'The secret key which cipers the cookie'
 def root():
     return redirect("/main")
 
-@app.route("/main", methods=['GET'])
-def main():
+@app.route("/xmain", methods=['GET'])
+def xmain():
     import os_lib_handle
     import os_lib_agent
     import os_lib_syscheck
@@ -93,9 +93,21 @@ def main():
         alert_count -= 1
 
     now = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
-    return render_template("main.html", now=now, agent_list=agent_list2,
+    return render_template("xmain.html", now=now, agent_list=agent_list2,
                                                 syscheck_global_list = syscheck_list2,
                                                 alert_list_html=alert_list_html)
+
+
+###########
+### Main ###
+###########
+
+@app.route("/main", methods = ['GET'])
+def main():
+    from ccprism.main import Main
+
+    ccmain = Main(request)
+    return ccmain.getHtml()
 
 
 ###############
