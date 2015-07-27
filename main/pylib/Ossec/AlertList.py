@@ -58,8 +58,8 @@ class Ossec_AlertList(object):
 
     def addAlert(self, alert):
         self._id_histogram.count(str(alert.id))
-        self._level_histogram.count(str(alert.srcip))
-        self._srcip_histogram.count(str(alert.level))
+        self._srcip_histogram.count(str(alert.srcip))
+        self._level_histogram.count(str(alert.level))
 
         # if the event is older then the earliest event, update the earliest event.
         if (self._earliest is None) or (alert.time < self._earliest.time):
@@ -94,8 +94,12 @@ class Ossec_AlertList(object):
 
         buffer += """<div id="alert_list_nav">"""
 
+        print ("--------- LEVEL SEVERITY-------------")
         buffer += self._tallyNav(self._level_histogram, 'level', 'severity', '+Severity breakdown')
+        print ("--------- ID RULE ------------------")
         buffer += self._tallyNav(self._id_histogram, 'id', 'rule', '+Rules breakdown')
+        print ("---------- SRCIP SOURCE IP ---------------")
+        buffer += self._tallyNav(self._srcip_histogram, 'srcip', 'Source IP', '+Src IP breakdown' )
 
         buffer += "</div>"
         buffer += "<br/>"
@@ -117,16 +121,130 @@ class Ossec_AlertList(object):
             buffer += alert.toHtml()
 
         buffer += """\
-                    <a name="lt" ></a>
+            <a name="lt" ></a>
         </div>
         """
 
+        buffer += """\
+
+        <script type="text/javascript">
+
+            // Get a list of all key/id combos. This is used in the Show
+            // Only and Clear Restrictions functionality.
+
+            var cnames = [];
+            $$('#alert_list_content div.alert').each(function(el){
+              cnames = cnames.concat($w(el.className).grep(/^(id|level|srcip)/)).uniq();
+            });
+
+            // Open or close the navigation link set for the key clicked.
+
+            $$('#alert_list_nav div.toggle').each(function(el){
+                Event.observe( el, 'click', function(e) { Event.stop(e);
+                    el.childElements().grep(new Selector("div.details")).invoke('toggle');
+                });
+            });
+
+            // Clear the current restrictions for a key. Show all alerts for
+            // that key type, and update the nav for all ids in that key.
+
+            $$('#alert_list_nav a.clear').each(function(el){
+                var mycname = $w(el.className).grep(/^(id|level|srcip)/);
+                var re_type = new RegExp('^' + (''+mycname).split('_')[0]);
+                Event.observe( el, 'click', function(e){ Event.stop(e);
+                    cnames.grep(re_type).each(function(c){
+                        $$('#alert_list_content .' + c ).invoke('show');
+                        $('showing_' + c).show(); $('hiding_' + c).hide();
+                    });
+                })
+            });
+
+            // Hide all alerts having the key/id clicked and update the
+            // nav links for that id.
+
+            $$('#alert_list_nav a.hide').each(function(el){
+                var mycname = $w(el.className).grep(/^(id|level|srcip)/);
+                Event.observe( el, 'click', function(e){ Event.stop(e);
+                    $$('#alert_list_content .' + mycname ).invoke('hide');
+                    $('showing_' + mycname, 'hiding_' + mycname).invoke('toggle');
+                })
+            });
+
+            // Hide all alerts not having the key/id clicked and update
+            // the nav links for the rest of the ids in the key clicked.
+
+            $$('#alert_list_nav a.only').each(function(el){
+                var mycname = $w(el.className).grep(/^(id|level|srcip)/);
+                var re_type = new RegExp('^' + (''+mycname).split('_')[0]);
+                Event.observe( el, 'click', function(e){ Event.stop(e);
+                    $$('#alert_list_content div.alert').each(function(el){
+                        el.hasClassName(mycname) ? null : el.hide();
+                    });
+                    cnames.without(mycname).grep(re_type).each(function(c){
+                        $('showing_' + c).hide(); $('hiding_' + c).show();
+                    });
+                });
+            });
+
+            // Show all alerts for the key/id clicked and update the nav
+            // links for that id.
+
+            $$('#alert_list_nav a.show').each(function(el){
+                var mycname = $w(el.className).grep(/^(id|level|srcip)/);
+                Event.observe( el, 'click', function(e){ Event.stop(e);
+                    $$('#alert_list_content .' + mycname ).invoke('show');
+                    $('showing_' + mycname, 'hiding_' + mycname).invoke('toggle');
+                })
+            });
+
+        </script>
+
+
+        """
 
         return buffer
 
 
     def _tallyNav(self, histogram, key, description, title):
+        tally = histogram.getRaw()
+        arsorted_tally_list = sorted(tally.items(), key=lambda x: x[1], reverse=True)
+        print ("### tally ###")
+        print (tally)
+        print(arsorted_tally_list)
         buffer = ""
+
+        buffer += """
+<div class="alert_list_nav">
+    <div class="asmall toggle">
+        <a href="#" title="%s" class="black bigg" style="font-weight:bold;"><span style="color:#333">%s</span></a>
+        <div class="asmall details" style="display:none">
+        """ % (title, title)
+
+        for _id, count in arsorted_tally_list:
+            print("_id is %s" % _id)
+            print("count is %s" % count)
+            buffer += """
+                <div id="showing_%s_%s" class="asmall">
+                        Showing %s alert(s) from <b>%s %s</b>
+                        <a href="#" class="asmall hide %s_%s" title="Hide this %s">(hide)</a>
+                        <a href="#" class="asmall only %s_%s" title="Show only this %s">(show only)</a>
+                </div>
+            """ % (key, _id, count, key, _id, key, _id, key, key, _id, key)
+
+            buffer += """
+                <div id="hiding_%s_%s" class="asmall" style="display:none;">
+                        Hiding %s alert(s) from <b>%s %s</b>
+                        <a href="#" class="asmall show %s_%s" title="Hiding %s">(show)</a>
+                </div>
+            """ % (key, _id, count, key, _id, key, _id, key)
+
+        buffer += """<a href="#" class="asmall clear %s" title="Clear %s restrictions">Clear %s restrictions</a> """ % (key, description, key)
+
+        buffer += """
+        </div>
+    </div>
+</div>
+        """
 
         return buffer
         pass
