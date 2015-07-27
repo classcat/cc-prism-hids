@@ -134,6 +134,18 @@ def stats():
     return ccstats.getHtml()
 
 
+############
+### About ###
+############
+
+@app.route("/help", methods= ['GET'])
+def help():
+    from ccprism.help import Help
+
+    cchelp = Help(request)
+    return cchelp.getHtml()
+
+
 ###
 
 @app.context_processor
