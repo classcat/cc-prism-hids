@@ -52,13 +52,13 @@ from .view import View
 
 class Search(View):
 
-    def __init__(self, request):
-        super().__init__()
+    def __init__(self, request, conf):
+        super().__init__(request, conf)
 
-        self.request = request
+        #self.request = request
 
-        self.html = ""
-        self.contents=  ""
+        #self.html = ""
+        #self.contents=  ""
 
         self.is_post = False
         if request.method == 'POST':
@@ -602,7 +602,7 @@ timeFormat     :    "24"
         self.contents = buffer
 
 
-    def _make_html(self):
+    def x_make_html(self):
         self.html = """\
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">

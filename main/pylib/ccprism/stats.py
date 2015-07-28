@@ -57,13 +57,13 @@ from .view import View
 
 class Stats(View):
 
-    def __init__(self, request):
-        super().__init__()
+    def __init__(self, request, conf):
+        super().__init__(request, conf)
 
-        self.request = request
+        #self.request = request
 
-        self.html = ""
-        self.contents=  ""
+        #self.html = ""
+        #self.contents=  ""
 
         self.is_post = False
         if request.method == 'POST':

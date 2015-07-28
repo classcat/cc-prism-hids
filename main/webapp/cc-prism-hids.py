@@ -20,6 +20,8 @@ import locale
 from flask import Flask, session, request, redirect, render_template, url_for
 from flask import jsonify, make_response
 
+from ccp_conf import CCPConf
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'The secret key which cipers the cookie'
 
@@ -106,7 +108,7 @@ def xmain():
 def main():
     from ccprism.main import Main
 
-    ccmain = Main(request)
+    ccmain = Main(request, CCPConf)
     return ccmain.getHtml()
 
 
@@ -118,7 +120,7 @@ def main():
 def syscheck():
     from ccprism.syscheck import SysCheck
 
-    ccsyscheck = SysCheck(request)
+    ccsyscheck = SysCheck(request, CCPConf)
     return ccsyscheck.getHtml()
 
 
@@ -130,7 +132,7 @@ def syscheck():
 def search():
     from ccprism.search import Search
 
-    ccsearch = Search(request)
+    ccsearch = Search(request, CCPConf)
     return ccsearch.getHtml()
 
 
@@ -142,7 +144,7 @@ def search():
 def stats():
     from ccprism.stats import Stats
 
-    ccstats = Stats(request)
+    ccstats = Stats(request, CCPConf)
     return ccstats.getHtml()
 
 
@@ -154,7 +156,7 @@ def stats():
 def help():
     from ccprism.help import Help
 
-    cchelp = Help(request)
+    cchelp = Help(request, CCPConf)
     return cchelp.getHtml()
 
 

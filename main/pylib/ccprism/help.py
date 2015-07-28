@@ -57,17 +57,13 @@ from .view import View
 
 class Help(View):
 
-    def __init__(self, request):
-        super().__init__()
+    def __init__(self, request, conf):
+        super().__init__(request, conf)
 
-        self.request = request
+        #self.request = request
 
-        self.html = ""
-        self.contents=  ""
 
-        self.is_post = False
-        if request.method == 'POST':
-            self.is_post = True
+
 
         self._make_contents()
         self._make_html()
