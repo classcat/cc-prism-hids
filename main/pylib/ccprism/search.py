@@ -262,7 +262,7 @@ class Search(View):
             if re.search(intpattern, str_max_alerts_per_page):
                 int_max_alerts_per_page = int (str_max_alerts_per_page)
                 if (int_max_alerts_per_page > 200) and (int_max_alerts_per_page < 10000):
-                    ossec_conf.ossec_max_alerts_per_page = int_max_alerts_per_page
+                    conf.ossec_max_alerts_per_page = int_max_alerts_per_page
 
 
         # Getting search id -- should be enough to avoid duplicates
@@ -503,7 +503,7 @@ timeFormat     :    "24"
                                     USER_searchid,
                                     USER_init,
                                     USER_final,
-                                    ossec_conf.ossec_max_alerts_per_page,
+                                    conf.ossec_max_alerts_per_page,
                                     USER_level,
                                     USER_rule,
                                     LOCATION_pattern,
@@ -565,7 +565,7 @@ timeFormat     :    "24"
         """ % (
                     datetime.fromtimestamp(u_init_time).strftime("%Y-%m-%d %H:%M"),
                     datetime.fromtimestamp(u_final_time).strftime("%Y-%m-%d %H:%M"),
-                    u_rule, u_srcip, u_user, u_location, u_level, USER_page, USER_searchid, USER_monitoring, ossec_conf.ossec_max_alerts_per_page
+                    u_rule, u_srcip, u_user, u_location, u_level, USER_page, USER_searchid, USER_monitoring, conf.ossec_max_alerts_per_page
                 )
 
         if output_list[0]['pg'] > 1:
