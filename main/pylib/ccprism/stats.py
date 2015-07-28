@@ -43,7 +43,7 @@ from collections import OrderedDict
 
 from babel.numbers import format_decimal
 
-import ossec_conf
+#import ossec_conf
 import os_lib_handle
 import os_lib_agent
 import os_lib_alerts
@@ -60,25 +60,27 @@ class Stats(View):
     def __init__(self, request, conf):
         super().__init__(request, conf)
 
-        #self.request = request
-
-        #self.html = ""
-        #self.contents=  ""
-
-        self.is_post = False
-        if request.method == 'POST':
-            self.is_post = True
-
         self._make_contents()
         self._make_html()
 
+
     def _make_contents(self):
         req       = self.request
+        conf = self.conf
+
         is_post = self.is_post
         form     = req.form
 
         # Starting handle
-        ossec_handle = os_lib_handle.os_handle_start(ossec_conf.ossec_dir)
+        #ossec_handle = os_lib_handle.os_handle_start(conf.ossec_dir)
+        if not conf.check_dir():
+            if is_lang_ja:
+                buffer += "ossec ディレクトリにアクセスできません。\n"
+            else:
+                buffer += "Unable to access ossec directory.\n"
+            self.contents = buffer
+            return
+        #ossec_handle = os_lib_handle.os_handle_start(ossec_conf.ossec_dir)
 
         # Current date values (day : 05, month : 07, year : 2015)
         curr_time = int(time.time())
@@ -216,7 +218,9 @@ Day:  <select name="day" class="formSelect">
         """
 
 
-        stats_list = os_lib_stats.os_getstats(ossec_handle, init_time, final_time)
+        stats_list = os_lib_stats.os_getstats(conf, init_time, final_time)
+        #stats_list = os_lib_stats.os_getstats(ossec_handle, init_time, final_time)
+
 
         print ("stats_list")
         print (stats_list)
@@ -543,7 +547,7 @@ Day:  <select name="day" class="formSelect">
 
 
 
-    def _make_html(self):
+    def x_make_html(self):
         self.html = """\
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">

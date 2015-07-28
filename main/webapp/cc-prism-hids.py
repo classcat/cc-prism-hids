@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+##############################################################
+# ClassCat(R) Prism for HIDS
+#  Copyright (C) 2015 ClassCat Co.,Ltd. All rights reseerved.
+##############################################################
+
 
 """
 >>> import sys
@@ -25,79 +30,14 @@ from ccp_conf import CCPConf
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'The secret key which cipers the cookie'
 
+
+###########
+### Root ###
+###########
+
 @app.route("/")
 def root():
     return redirect("/main")
-
-@app.route("/xmain", methods=['GET'])
-def xmain():
-    import os_lib_handle
-    import os_lib_agent
-    import os_lib_syscheck
-    import os_lib_alerts
-    import ossec_conf
-    import datetime
-    ossec_handle = os_lib_handle.os_handle_start(ossec_conf.ossec_dir)
-    if ossec_handle is None:
-        print("Unable to access ossec directory.\n")
-        return(1)
-
-    agent_list = os_lib_agent.os_getagents(ossec_handle)
-    agent_list2 = []
-    agent_count = 0
-
-    for agent in agent_list:
-        agent['id'] = agent_count
-        agent_count += 1
-
-        agent['change_time_fmt'] = datetime.datetime.fromtimestamp(agent['change_time']).strftime("%m/%d/%Y %H:%M:%S")
-
-        atitle = ""
-        aclass = ""
-        amsg = ""
-
-        #If agent is connected
-        if agent['connected']:
-            atitle = "Agent active"
-            aclass = "bluez"
-        else:
-            atitle = "Agent Inactive"
-            aclass = "red"
-            amsg = " - Inactive"
-
-        agent['atitle'] = atitle
-        agent['aclass'] = aclass
-        agent['amsg'] = amsg
-
-        agent_list2.append(agent)
-
-    syscheck_list = os_lib_syscheck.os_getsyscheck(ossec_handle)
-
-    syscheck_count = 0
-    syscheck_list2 = []
-    # {'time_stamp':time_stamp, '_name':_name, 'sk_file_name':sk_file_name}
-    for syscheck in syscheck_list['global_list']['files']:
-        ts = datetime.datetime.fromtimestamp(int(syscheck['time_stamp'])).strftime("%m/%d/%Y %H:%M:%S")
-        syscheck_list2.append({'id':syscheck_count, 'ts':ts, 'name':syscheck['_name'], 'filename':syscheck['sk_file_name']})
-        syscheck_count += 1
-        if syscheck_count >= 10:
-            break
-        pass
-
-    alert_list = os_lib_alerts.os_getalerts(ossec_handle, 0, 0, 30)
-
-    alert_count = alert_list.size() - 1
-    alert_array  = alert_list.alerts()
-
-    alert_list_html = ""
-    while (alert_count>=0):
-        alert_list_html += alert_array[alert_count].toHtml()
-        alert_count -= 1
-
-    now = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
-    return render_template("xmain.html", now=now, agent_list=agent_list2,
-                                                syscheck_global_list = syscheck_list2,
-                                                alert_list_html=alert_list_html)
 
 
 ###########
@@ -108,7 +48,7 @@ def xmain():
 def main():
     from ccprism.main import Main
 
-    ccmain = Main(request, CCPConf)
+    ccmain = Main(request, CCPConf())
     return ccmain.getHtml()
 
 
@@ -120,7 +60,7 @@ def main():
 def syscheck():
     from ccprism.syscheck import SysCheck
 
-    ccsyscheck = SysCheck(request, CCPConf)
+    ccsyscheck = SysCheck(request, CCPConf())
     return ccsyscheck.getHtml()
 
 
@@ -132,7 +72,7 @@ def syscheck():
 def search():
     from ccprism.search import Search
 
-    ccsearch = Search(request, CCPConf)
+    ccsearch = Search(request, CCPConf())
     return ccsearch.getHtml()
 
 
@@ -144,7 +84,7 @@ def search():
 def stats():
     from ccprism.stats import Stats
 
-    ccstats = Stats(request, CCPConf)
+    ccstats = Stats(request, CCPConf())
     return ccstats.getHtml()
 
 
@@ -156,7 +96,7 @@ def stats():
 def help():
     from ccprism.help import Help
 
-    cchelp = Help(request, CCPConf)
+    cchelp = Help(request, CCPConf())
     return cchelp.getHtml()
 
 

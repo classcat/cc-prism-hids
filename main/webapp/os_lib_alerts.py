@@ -329,7 +329,7 @@ rc_code_hash : %s
             elif (not rc_code_hash['str_pattern']) and (pattern_matched == 1):
                 evt_srcip = None
                 evt_user = None
-                continue 
+                continue
 
         # if we reach here, we got a full alert.
 
@@ -524,7 +524,9 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
         # If the file does not exist, it must be gzipped so switch to a
         # compressed stream for reading and try again. If that also fails,
         # abort this log file and continue on to the next one.
-        log_file = ossec_handle['dir'] + "/" + file
+        log_file = ossec_handle.ossec_dir + "/" + file
+#                log_file = ossec_handle['dir'] + "/" + file
+
 
         fobj = None
         try:
@@ -678,7 +680,9 @@ def os_getalerts(ossec_handle, init_time = 0, final_time = 0, max_count = 30):
     alert_list = Ossec_AlertList()
     curr_time = datetime.now()
 
-    log_file = ossec_handle['dir'] + "/logs/alerts/alerts.log"
+    log_file = ossec_handle.ossec_dir + "/logs/alerts/alerts.log"
+    #    log_file = ossec_handle['dir'] + "/logs/alerts/alerts.log"
+
 
     fobj = open(log_file, 'rb')
     #fobj = open(log_file, 'r')

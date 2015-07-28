@@ -142,7 +142,9 @@ def os_getstats(ossec_handle, init_time, final_time):
 
         l_day = str(int(l_day))  # これ、重要、padding をはずして、文字列に
 
-        log_file = ossec_handle['dir'] + "/" + file
+        log_file = ossec_handle.ossec_dir + "/" + file
+        #         log_file = ossec_handle['dir'] + "/" + file
+
 
         # Adding one day
         init_loop += 86400

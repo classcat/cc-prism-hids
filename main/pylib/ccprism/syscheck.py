@@ -6,7 +6,7 @@ from flask import Flask, session, request, redirect, render_template, url_for
 from flask import jsonify, make_response
 
 import datetime
-import ossec_conf
+#import ossec_conf
 import os_lib_handle
 import os_lib_syscheck
 
@@ -17,15 +17,14 @@ class SysCheck(View):
     def __init__(self, request, conf):
         super().__init__(request, conf)
 
-        #self.request = request
-
-        #self.html = ""
-        #self.contents=  ""
-
         self._make_contents()
         self._make_html()
 
     def _make_contents(self):
+
+        req = self.request
+        form = req.form
+        conf = self.conf
 
         #<form name="dosearch" method="post" action="index.php?f=i">
         #<table><tr valign="top">
@@ -57,10 +56,20 @@ class SysCheck(View):
             pass
 
         # Starting handle
-        ossec_handle = os_lib_handle.os_handle_start(ossec_conf.ossec_dir)
+        if not conf.check_dir():
+            if is_lang_ja:
+                buffer += "ossec ディレクトリにアクセスできません。\n"
+            else:
+                buffer += "Unable to access ossec directory.\n"
+            self.contents = buffer
+            return
+        #ossec_handle = os_lib_handle.os_handle_start(conf.ossec_dir)
+        #ossec_handle = os_lib_handle.os_handle_start(ossec_conf.ossec_dir)
 
         # Getting syscheck information
-        syscheck_list = os_lib_syscheck.os_getsyscheck(ossec_handle)
+        syscheck_list = os_lib_syscheck.os_getsyscheck(conf)
+#                syscheck_list = os_lib_syscheck.os_getsyscheck(ossec_handle)
+
 
         buffer = ""
 
@@ -99,8 +108,9 @@ class SysCheck(View):
         # Dumping database
         if request.method == 'POST':
             if (request.form.get('ss') == "Dump database") and (USER_agent is not None):
-                print("Let's go!!!!!!!!!!!!!!!!!!!!")
-                dump_buffer = os_lib_syscheck.os_syscheck_dumpdb(ossec_handle, USER_agent)
+                dump_buffer = os_lib_syscheck.os_syscheck_dumpdb(conf, USER_agent)
+                #dump_buffer = os_lib_syscheck.os_syscheck_dumpdb(ossec_handle, USER_agent)
+
 
                 self.contents = buffer + dump_buffer
                 return
@@ -169,7 +179,7 @@ class SysCheck(View):
 
         self.contents = buffer
 
-    def _make_html(self):
+    def x_make_html(self):
         self.html = """\
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">

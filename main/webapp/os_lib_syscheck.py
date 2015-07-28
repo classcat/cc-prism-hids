@@ -232,7 +232,9 @@ def os_syscheck_dumpdb(ossec_handle, agent_name):
     syscheck_list = []
     syscheck_count = 0
 
-    sk_dir = ossec_handle['dir'] + "/queue/syscheck"
+    sk_dir = ossec_handle.ossec_dir + "/queue/syscheck"
+    #     sk_dir = ossec_handle['dir'] + "/queue/syscheck"
+
 
     buffer = ""
 
@@ -266,7 +268,9 @@ def os_getsyscheck(ossec_handle = None):
     syscheck_list = OrderedDict()
     syscheck_count = 0
 
-    sk_dir = ossec_handle['dir'] + "/queue/syscheck"
+    sk_dir = ossec_handle.ossec_dir + "/queue/syscheck"
+    #    sk_dir = ossec_handle['dir'] + "/queue/syscheck"
+
 
     # .syscheck.cpt
     # syscheck

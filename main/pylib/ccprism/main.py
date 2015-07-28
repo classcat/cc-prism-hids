@@ -1,32 +1,9 @@
-"""
-/**
- * Ossec Framework
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * @category   Ossec
- * @package    Ossec
- * @version    $Id: Histogram.php,v 1.3 2008/03/03 15:12:18 dcid Exp $
- * @author     Chris Abernethy
- * @copyright  Copyright (c) 2007-2008, Daniel B. Cid <dcid@ossec.net>, All rights reserved.
- * @license    http://www.gnu.org/licenses/gpl-3.0.txt GNU Public License
- */
-"""
 
 ##############################################################
-#  Copyright C) 2015 Masashi Okumura All rights reseerved.
+# ClassCat(R) Prism for HIDS
+#  Copyright (C) 2015 ClassCat Co.,Ltd. All rights reseerved.
 ##############################################################
+
 
 import os,sys
 import re
@@ -35,23 +12,22 @@ from flask import Flask, session, request, redirect, render_template, url_for
 from flask import jsonify, make_response
 
 from datetime import *
-import time
-import uuid
-import hashlib
+#import time
+#import uuid
+#import hashlib
 
 from collections import OrderedDict
 
 from babel.numbers import format_decimal
 
-import ossec_conf
+#import ossec_conf
 import os_lib_handle
 import os_lib_agent
 import os_lib_alerts
-import os_lib_stats
 import os_lib_syscheck
 
-from ossec_categories import global_categories
-from ossec_formats import log_categories
+#from ossec_categories import global_categories
+#from ossec_formats import log_categories
 
 from .view import View
 
@@ -60,40 +36,47 @@ class Main(View):
     def __init__(self, request, conf):
         super().__init__(request, conf)
 
-        #self.request = request
-        #self.conf = conf
-
-        #self.html = ""
-        #self.contents=  ""
-
-        #self.is_post = False
-        #if request.method == 'POST':
-        #    self.is_post = True
-
         self._make_contents()
         self._make_html()
 
+
     def _make_contents(self):
         req       = self.request
+        conf  = self.conf
+
         is_post = self.is_post
         form     = req.form
-
-        # Starting handle
-        ossec_handle = os_lib_handle.os_handle_start(ossec_conf.ossec_dir)
-        if ossec_handle is None:
-            print("Unable to access ossec directory.\n")
-            return(1)
-
-        # Getting all agents
-        agent_list = os_lib_agent.os_getagents(ossec_handle)
+        is_lang_ja = self.is_lang_ja
 
         buffer = ""
+
+        # Starting handle
+        #ossec_handle = os_lib_handle.os_handle_start(conf.ossec_dir)
+        #ossec_handle = conf
+
+        # ossec_handle = os_lib_handle.os_handle_start(ossec_conf.ossec_dir)
+
+        if not conf.check_dir():
+            if is_lang_ja:
+                buffer += "ossec ディレクトリにアクセスできません。\n"
+            else:
+                buffer += "Unable to access ossec directory.\n"
+            self.contents = buffer
+            return
+
+        # Getting all agents
+        agent_list = os_lib_agent.os_getagents(conf)
+        #agent_list = os_lib_agent.os_getagents(ossec_handle)
+
+
 
         # Printing current date
         buffer += """<div class="smaller2">%s</div><br />""" %  datetime.now().strftime("%m/%d/%Y %H:%M:%S")
 
         # Geteting syscheck information
-        syscheck_list = os_lib_syscheck.os_getsyscheck(ossec_handle)
+        syscheck_list = os_lib_syscheck.os_getsyscheck(conf)
+        #syscheck_list = os_lib_syscheck.os_getsyscheck(ossec_handle)
+
 
         buffer += '<table width="95%"><tr><td width="45%" valign="top">'
 
@@ -148,7 +131,9 @@ class Main(View):
 
         # Last modified files
         buffer += "<td valign='top' width='55%'><h2>Latest modified files: </h2><br />\n\n"
-        syscheck_list = os_lib_syscheck.os_getsyscheck(ossec_handle)
+        syscheck_list = os_lib_syscheck.os_getsyscheck(conf)
+#                syscheck_list = os_lib_syscheck.os_getsyscheck(ossec_handle)
+
 
         #if (len(syscheck_list) == 0) or (len(syscheck_list['global_list']) == 0):
         #    pass
@@ -195,7 +180,9 @@ class Main(View):
         buffer += "<br /> <br />\n"
 
         # Getting last alerts
-        alert_list = os_lib_alerts.os_getalerts(ossec_handle, 0, 0, 30)
+        alert_list = os_lib_alerts.os_getalerts(conf, 0, 0, 30)
+#                alert_list = os_lib_alerts.os_getalerts(ossec_handle, 0, 0, 30)
+
 
         buffer += "<h2>Latest events</h2><br />\n"
 
@@ -208,45 +195,3 @@ class Main(View):
 
 
         self.contents = buffer
-
-
-
-    def x_make_html(self):
-        self.html = """\
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-%s
-</head>
-
-<body>
-    <br/>
-%s
-
-<div id="container">
-  <div id="content_box">
-  <div id="content" class="pages">
-  <a name="top"></a>
-
-  <!-- BEGIN: content -->
-
-  %s
-
-  <!-- END: content -->
-
-  <br /><br />
-  <br /><br />
-  </div>
-  </div>
-
-%s
-
-</div>
-</body>
-</html>
-""" % (View.HEAD, View.HEADER, self.contents, View.FOOTER)
-        pass
-
-
-    def getHtml(self):
-        return self.html

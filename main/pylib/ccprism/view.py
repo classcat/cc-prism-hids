@@ -1,4 +1,8 @@
 
+##############################################################
+# ClassCat(R) Prism for HIDS
+#  Copyright (C) 2015 ClassCat Co.,Ltd. All rights reseerved.
+##############################################################
 
 class View(object):
 
@@ -94,13 +98,24 @@ class View(object):
 <!-- END of FOOTER -->
 """
 
+    FOOTER_JA = """\
+<!-- OSSEC UI footer -->
+
+<div id="footer">
+    <p class="center">Copyright &copy; 2015 <a href="http://www.classcat.com"><font color="red"><b>ClassCat Co.,Ltd.</b></font></a>. All rights reserved</p>
+</div>
+
+<!-- END of FOOTER -->
+"""
+
     def __init__(self, request, conf):
 
         self.request = request
         self.conf = conf
 
-        self.lang = conf['lang']
-        if conf['lang'] == 'ja':
+        self.lang = conf.lang
+        #self.lang = conf['lang']
+        if conf.lang == 'ja':
             self.is_lang_ja = True
         else:
             self.is_lang_ja = False
@@ -117,12 +132,13 @@ class View(object):
 
     def _make_html(self):
         tmpl_head  = View.HEAD
+        tmpl_header = View.HEADER
+        tmpl_footer = View.FOOTER
+
         if self.is_lang_ja:
             tmpl_head = View.HEAD_JA
-
-        tmpl_header = View.HEADER
-        if self.is_lang_ja:
             tmpl_header = View.HEADER_JA
+            tmpl_footer = View.FOOTER_JA
 
         self.html = """\
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -156,5 +172,8 @@ class View(object):
 </div>
 </body>
 </html>
-""" % (tmpl_head, tmpl_header, self.contents, View.FOOTER)
+""" % (tmpl_head, tmpl_header, self.contents, tmpl_footer)
         pass
+
+    def getHtml(self):
+        return self.html

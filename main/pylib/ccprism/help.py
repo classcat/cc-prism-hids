@@ -43,7 +43,7 @@ from collections import OrderedDict
 
 from babel.numbers import format_decimal
 
-import ossec_conf
+#import ossec_conf
 import os_lib_handle
 import os_lib_agent
 import os_lib_alerts
@@ -60,11 +60,6 @@ class Help(View):
     def __init__(self, request, conf):
         super().__init__(request, conf)
 
-        #self.request = request
-
-
-
-
         self._make_contents()
         self._make_html()
 
@@ -73,8 +68,18 @@ class Help(View):
         is_post = self.is_post
         form     = req.form
 
+        buffer_ja = ""
+        if self.is_lang_ja:
+            buffer_ja = """\
+<br/>
+本ソフトウェアは(株)クラスキャットが改変したものです。
+<br/><br/>
+<hr/>
+        """
+
         buffer = """\
 <h2>About</h2>
+%s
 <br />
 <font size="2">
 OSWUI is a an open source web interface for the <a href="http://www.ossec.net">OSSEC-HIDS</a> project. For details on
@@ -84,12 +89,12 @@ available at <a href="http://www.ossec.net/?page_id=21">http://www.ossec.net/?pa
 <br /><br />
 For information regarding commercial support, please visit <a href="http://www.ossec.net/?page_id=21">http://www.ossec.net/?page_id=21</a>.
 <br /><br /><br />
-<h3 class="my">Development team</h3>
+<!-- <h3 class="my">Development team</h3>
 
 <dd><strong>Daniel Cid</strong> - dcid ( at ) dcid.me</dd>
 <dd><strong>Chris Abernethy</strong> - chris.abernethy (at) ossec.net</dd>
 <dd><strong>Vic Hargrave</strong> - ossec ( at )  vichargrave.com</dd>
-<br /><br /><br />
+<br /><br /><br /> -->
 
 <h3 class="my">License</h3>
 <font size="2">
@@ -102,13 +107,13 @@ OSSEC is distributed in the hope that it will be useful, but WITHOUT ANY WARRANT
 </font>
 
 
-"""
+""" % buffer_ja
 
         self.contents = buffer
 
 
 
-    def _make_html(self):
+    def x_make_html(self):
         self.html = """\
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">

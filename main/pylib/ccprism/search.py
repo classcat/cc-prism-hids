@@ -39,7 +39,7 @@ import time
 import uuid
 import hashlib
 
-import ossec_conf
+#import ossec_conf
 import os_lib_handle
 import os_lib_agent
 import os_lib_alerts
@@ -55,30 +55,36 @@ class Search(View):
     def __init__(self, request, conf):
         super().__init__(request, conf)
 
-        #self.request = request
-
-        #self.html = ""
-        #self.contents=  ""
-
-        self.is_post = False
-        if request.method == 'POST':
-            self.is_post = True
-
         self._make_contents()
         self._make_html()
 
 
     def _make_contents(self):
 
+        conf = self.conf
+
         # Starting handle
-        ossec_handle = os_lib_handle.os_handle_start(ossec_conf.ossec_dir)
+        #ossec_handle = os_lib_handle.os_handle_start(conf.ossec_dir)
+#                ossec_handle = os_lib_handle.os_handle_start(conf['ossec_dir'])
+
+        #ossec_handle = os_lib_handle.os_handle_start(ossec_conf.ossec_dir)
+
+        if not conf.check_dir():
+            if is_lang_ja:
+                buffer += "ossec ディレクトリにアクセスできません。\n"
+            else:
+                buffer += "Unable to access ossec directory.\n"
+            self.contents = buffer
+            return
 
         # Iniitializing some variables
         u_final_time = int(time.time())
         #u_final_time = int(time.mktime(datetime.now().timetuple()))
-        u_init_time   = int(u_final_time  - ossec_conf.ossec_search_time) # 14400 = 3600 * 4
+        u_init_time   = int(u_final_time  - conf.ossec_search_time) # 14400 = 3600 * 4
+        #         u_init_time   = int(u_final_time  - ossec_conf.ossec_search_time) # 14400 = 3600 * 4
 
-        u_level = ossec_conf.ossec_search_level   # 7
+
+        u_level = conf.ossec_search_level # ossec_conf.ossec_search_level   # 7
         u_pattern = ""
         u_rule = ""
         u_srcip = ""
@@ -306,7 +312,8 @@ class Search(View):
             buffer += "</div><br/>"
 
         # Getting all agents
-        agent_list = os_lib_agent.os_getagents(ossec_handle)
+        agent_list = os_lib_agent.os_getagents(conf)
+        #agent_list = os_lib_agent.os_getagents(ossec_handle)
 
 
         buffer += "<h2>Alert search options:</h2>\n"
@@ -419,7 +426,8 @@ class Search(View):
         buffer += """'</td></tr><tr><td>
             Max Alerts:</td>
             <td><input type="text" name="max_alerts_per_page" size="8" value="%s" class="formText" /></td></tr>
-        """ % ossec_conf.ossec_max_alerts_per_page
+        """ % conf.ossec_max_alerts_per_page
+        #ossec_conf.ossec_max_alerts_per_page
 
         # Agent
         # seems not implemented
@@ -485,11 +493,13 @@ timeFormat     :    "24"
             str_search = self.request.form.get("search")
 
             if str_search != "Search":
-                output_list = os_lib_alerts.os_getstoredalerts(ossec_handle, USER_searchid)
+                output_list = os_lib_alerts.os_getstoredalerts(conf, USER_searchid)
+                #                 output_list = os_lib_alerts.os_getstoredalerts(ossec_handle, USER_searchid)
+
                 used_stored = 1
             else:  # Searchiing for new ones
                 # Getting alerts
-                output_list = os_lib_alerts.os_searchalerts(ossec_handle,
+                output_list = os_lib_alerts.os_searchalerts(conf, #ossec_handle,
                                     USER_searchid,
                                     USER_init,
                                     USER_final,
@@ -602,42 +612,7 @@ timeFormat     :    "24"
         self.contents = buffer
 
 
-    def x_make_html(self):
-        self.html = """\
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-%s
-</head>
-
-<body>
-    <br/>
-%s
-
-<div id="container">
-  <div id="content_box">
-  <div id="content" class="pages">
-  <a name="top"></a>
-
-  <!-- BEGIN: content -->
-
-  %s
-
-  <!-- END: content -->
-
-  <br /><br />
-  <br /><br />
-  </div>
-  </div>
-
-%s
-
-</div>
-</body>
-</html>
-""" % (View.HEAD, View.HEADER, self.contents, View.FOOTER)
-        pass
 
 
-    def getHtml(self):
+    def xgetHtml(self):
         return self.html
