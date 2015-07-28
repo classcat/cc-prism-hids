@@ -4,6 +4,12 @@
 #  Copyright (C) 2015 ClassCat Co.,Ltd. All rights reseerved.
 ##############################################################
 
+# ===  Notice ===
+# all python scripts were written by masao (@classcat.com)
+#
+# === History ===
+#
+#
 
 import os,sys
 import re
@@ -18,16 +24,9 @@ from datetime import *
 
 from collections import OrderedDict
 
-from babel.numbers import format_decimal
-
-#import ossec_conf
-import os_lib_handle
 import os_lib_agent
 import os_lib_alerts
 import os_lib_syscheck
-
-#from ossec_categories import global_categories
-#from ossec_formats import log_categories
 
 from .view import View
 
@@ -41,20 +40,15 @@ class Main(View):
 
 
     def _make_contents(self):
-        req       = self.request
+        req    = self.request
         conf  = self.conf
 
+        form  = req.form
+
         is_post = self.is_post
-        form     = req.form
         is_lang_ja = self.is_lang_ja
 
         buffer = ""
-
-        # Starting handle
-        #ossec_handle = os_lib_handle.os_handle_start(conf.ossec_dir)
-        #ossec_handle = conf
-
-        # ossec_handle = os_lib_handle.os_handle_start(ossec_conf.ossec_dir)
 
         if not conf.check_dir():
             if is_lang_ja:
@@ -64,14 +58,14 @@ class Main(View):
             self.contents = buffer
             return
 
-        # Getting all agents
+        # Getting all agents - No error happens.
         agent_list = os_lib_agent.os_getagents(conf)
-        #agent_list = os_lib_agent.os_getagents(ossec_handle)
-
-
 
         # Printing current date
-        buffer += """<div class="smaller2">%s</div><br />""" %  datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+        if is_lang_ja:
+            buffer += """<div class="smaller2">現在時刻 : <b>%s</b></div><br />""" %  datetime.now().strftime("%m/%d/%Y (%a) %H:%M:%S")
+        else:
+            buffer += """<div class="smaller2">%s</div><br />""" %  datetime.now().strftime("%m/%d/%Y (%a) %H:%M:%S")
 
         # Geteting syscheck information
         syscheck_list = os_lib_syscheck.os_getsyscheck(conf)

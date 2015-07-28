@@ -1,6 +1,29 @@
 #/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+/* Copyright (C) 2006-2008 Daniel B. Cid <dcid@ossec.net>
+ * All rights reserved.
+ *
+ * This program is a free software; you can redistribute it
+ * and/or modify it under the terms of the GNU General Public
+ * License (version 3) as published by the FSF - Free Software
+ * Foundation
+ */
+"""
+
+##############################################################
+# ClassCat(R) Prism for HIDS
+#  Copyright (C) 2015 ClassCat Co.,Ltd. All rights reseerved.
+##############################################################
+
+# === Notice ===
+# all python scripts were written by masao (@classcat.com)
+#
+# === History ===
+
+#
+
 import os
 import datetime
 import re
@@ -264,40 +287,51 @@ def os_syscheck_dumpdb(ossec_handle, agent_name):
     return buffer
     pass
 
-def os_getsyscheck(ossec_handle = None):
+
+def os_getsyscheck(conf):
+    #@ 29-jul-15 : fixed for beta.
     syscheck_list = OrderedDict()
     syscheck_count = 0
 
-    sk_dir = ossec_handle.ossec_dir + "/queue/syscheck"
-    #    sk_dir = ossec_handle['dir'] + "/queue/syscheck"
-
+    sk_dir = "%s%s" % (conf.ossec_dir, "/queue/syscheck")
 
     # .syscheck.cpt
     # syscheck
 
-    g_last_changes = {}
+    g_last_changes = OrderedDict()
+    #     g_last_changes = {}
 
     filelist = os.listdir(sk_dir)
+
+    filepattern = "^\(([\.a-zA-Z0-9_-]+)\) " + "([0-9\._]+|any)->([a-zA-Z_-]+)$"
+
     for file in filelist:
         _name = ""
+
         if file[0] == '.':
             continue
 
-        if file == "syscheck":
-            _name = "ossec-server"
+        regs = re.match(filepattern, file)
+        if regs:
+            if regs.group(2) == "syscheck-registry":
+                _name = regs.group(1) + " Windows registry"
+            else:
+                _name = regs.group(1)
         else:
-            continue
+            if file == "syscheck":
+                _name = "ossec-server"
+            else:
+                continue
 
-        #print("os_getsyscheck" + _name)
-        #_name = str(_name)
-        syscheck_list[_name] = {}
+        syscheck_list[_name] = OrderedDict()
         syscheck_list[_name]['list'] =  __os_getchanges(sk_dir + "/" + file, g_last_changes, _name);
 
         syscheck_count += 1
 
     syscheck_list['global_list'] = g_last_changes
 
+    # filelist が [] の場合は、{'global_list' : {} } を返すことになる。
     return(syscheck_list);
 
-    #return None
-    pass
+
+### End of Script ###

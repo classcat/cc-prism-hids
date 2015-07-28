@@ -121,6 +121,7 @@ class SysCheck(View):
         last_mod_date = ""
         sk_count = 0
 
+        # in case NO syscheck file, { 'global_list' : {} } が返るので、'files' は当然ない
         for syscheck in syscheck_list['global_list']['files']:
             sk_count += 1
 
