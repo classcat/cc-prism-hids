@@ -698,6 +698,8 @@ def os_getstoredalerts(ossec_handle, search_id):
 
 
 def os_getalerts(ossec_handle, init_time = 0, final_time = 0, max_count = 30):
+    # TODO: This is always called with init_time=0, final_time=0 and max_count=30.
+
     file = ""
     alert_list = Ossec_AlertList()
     curr_time = datetime.now()
@@ -707,7 +709,7 @@ def os_getalerts(ossec_handle, init_time = 0, final_time = 0, max_count = 30):
 
     fobj = None
     try:
-        fobj = open(log_file + "a", 'rb')
+        fobj = open(log_file, 'rb')
     except Exception as e:
         raise Exception("file binary open failed. (os_getalerts#os_lib_alerts) %s" % e)
     #fobj = open(log_file, 'r')
@@ -751,3 +753,6 @@ def os_getalerts(ossec_handle, init_time = 0, final_time = 0, max_count = 30):
     fobj.close()
     return alert_list
     pass
+
+
+### End of Script ###

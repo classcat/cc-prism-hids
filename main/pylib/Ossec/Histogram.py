@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 /**
  * Ossec Framework
@@ -27,24 +25,35 @@
 """
 
 ##############################################################
-#  Copyright C) 2015 Masashi Okumura All rights reseerved.
+# ClassCat(R) Prism for HIDS
+#  Copyright (C) 2015 ClassCat Co.,Ltd. All rights reseerved.
 ##############################################################
+
+# ===  Notice ===
+# all python scripts were written by masao (@classcat.com)
+#
+# === History ===
+# 29-jul-15 : fixed for beta.
+#
 
 from collections import OrderedDict
 
 class Ossec_Histogram(object):
     def __init__(self):
         # Histogram data stored as a hash.
-        self._histogram = OrderedDict()
+        self._histogram = {} #OrderedDict()
+
 
     def count(self, key, num=1):
         # Increment the counter for the specified key by the given number (one, bydefault)
-        if key not in self._histogram:
+        if key not in self._histogram.keys():
             self._histogram[key] = 0
 
         self._histogram[key] += int(num)
 
+
     def getRaw(self):
+        # Return raw histogram data
         return self._histogram
 
 

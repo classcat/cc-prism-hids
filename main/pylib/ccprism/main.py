@@ -202,7 +202,7 @@ class Main(View):
         alert_list = None
         is_error_alerts = False
         try:
-            alert_list = os_lib_alerts.os_getalerts(conf, 0, 0, 30)
+            alert_list = os_lib_alerts.os_getalerts(conf, 0, 0, 30)  # init_time, final_time, max_count
 
         except Exception as e:
             is_error_alert_list = True

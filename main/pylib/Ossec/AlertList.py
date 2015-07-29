@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 /**
  * Ossec Framework
@@ -27,11 +25,15 @@
 """
 
 ##############################################################
-#  Copyright C) 2015 Masashi Okumura All rights reseerved.
+# ClassCat(R) Prism for HIDS
+#  Copyright (C) 2015 ClassCat Co.,Ltd. All rights reseerved.
 ##############################################################
 
-
-#from collections import OrderedDict
+# ===  Notice ===
+# all python scripts were written by masao (@classcat.com)
+#
+# === History ===
+#
 
 from datetime import *
 
@@ -48,7 +50,6 @@ class Ossec_AlertList(object):
         self._id_histogram = Ossec_Histogram()
         self._level_histogram = Ossec_Histogram()
         self._srcip_histogram = Ossec_Histogram()
-        pass
 
 
     # Return the array of alerts
