@@ -78,7 +78,7 @@ class View(object):
 
   <ul id="nav">
   <li><a href="main" title="Main">メイン</a></li>
-  <li><a href="search" title="Search events">検索</a></li>
+  <li><a href="search" title="Search events">Alert 検索</a></li>
   <li><a href="syscheck" title="Integrity checking">整合性チェック</a></li>
   <li><a href="stats" title="Stats">統計情報</a></li>
   <li><a href="help" title="Help">About</a></li>

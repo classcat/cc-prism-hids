@@ -32,24 +32,31 @@
 # ===  Notice ===
 # all python scripts were written by masao (@classcat.com)
 #
+# === TODO ===
+# 29-jul-15 :  src ip 毎の集計
+#
 # === History ===
 #
 
 from datetime import *
 
+from collections import OrderedDict
+
 from .Histogram import Ossec_Histogram
 
 class Ossec_AlertList(object):
-    def __init__(self):
+    def __init__(self, conf):
+        self.conf = conf
+
         #self._alerts = OrderedDict()
-        self._alerts = []
+        self._alerts = [] # TODO : ただのリストで良い？
 
         self._earliest = None # alert object
         self._latest = None
 
-        self._id_histogram = Ossec_Histogram()
-        self._level_histogram = Ossec_Histogram()
-        self._srcip_histogram = Ossec_Histogram()
+        self._id_histogram = Ossec_Histogram()  # Rule ID 毎の集計
+        self._level_histogram = Ossec_Histogram()  # Level 毎の集計
+        self._srcip_histogram = Ossec_Histogram()  # Src IP 毎の集計
 
 
     # Return the array of alerts
@@ -58,8 +65,8 @@ class Ossec_AlertList(object):
 
 
     def addAlert(self, alert):
-        self._id_histogram.count(str(alert.id))
-        self._srcip_histogram.count(str(alert.srcip))
+        self._id_histogram.count(str(alert.id))  # default は 1 をインクリメント
+        self._srcip_histogram.count(str(alert.srcip))  # TODO : srcip がない場合はどうする？ それから、src ip 毎の集計は？
         self._level_histogram.count(str(alert.level))
 
         # if the event is older then the earliest event, update the earliest event.
@@ -85,6 +92,10 @@ class Ossec_AlertList(object):
 
 
     def toHtml(self):
+        is_lang_ja = False
+        if self.conf.lang == 'ja':
+            is_lang_ja = True
+
         buffer = ""
 
         first = self.earliest()
@@ -95,31 +106,51 @@ class Ossec_AlertList(object):
 
         buffer += """<div id="alert_list_nav">"""
 
-        print ("--------- LEVEL SEVERITY-------------")
-        buffer += self._tallyNav(self._level_histogram, 'level', 'severity', '+Severity breakdown')
-        print ("--------- ID RULE ------------------")
-        buffer += self._tallyNav(self._id_histogram, 'id', 'rule', '+Rules breakdown')
-        print ("---------- SRCIP SOURCE IP ---------------")
-        buffer += self._tallyNav(self._srcip_histogram, 'srcip', 'Source IP', '+Src IP breakdown' )
+        if is_lang_ja:
+            buffer += self._tallyNav(self._level_histogram, 'level', 'severity', '+重要度・ブレークダウン')
+            buffer += self._tallyNav(self._id_histogram, 'id', 'rule', '+ルール・ブレークダウン')
+            buffer += self._tallyNav(self._srcip_histogram, 'srcip', 'Source IP', '+ソース IP・ブレークダウン' )
+        else:
+            buffer += self._tallyNav(self._level_histogram, 'level', 'severity', '+Severity breakdown')
+            buffer += self._tallyNav(self._id_histogram, 'id', 'rule', '+Rules breakdown')
+            buffer += self._tallyNav(self._srcip_histogram, 'srcip', 'Source IP', '+Src IP breakdown' )
 
         buffer += "</div>"
         buffer += "<br/>"
 
-        buffer += """
+        if is_lang_ja:
+            buffer += """
+<table width="100%%">
+<tr><td><b>最初のイベント</b> : <a href="#lt">%s</a></td></tr>
+<tr><td><b>最後のイベント</b> : <a href="#ft">%s</a></td></tr>
+</table>
+<br />""" % (first, last)
+        else:
+            buffer += """
 <table width="100%%">
 <tr><td><b>First event</b> at <a href="#lt">%s</a></td></tr>
 <tr><td><b>Last event</b> at <a href="#ft">%s</a></td></tr>
 </table>
 <br />""" % (first, last)
 
-        buffer += """\
+        if is_lang_ja:
+            buffer += """\
+        <h2>Alert リスト</h2>
+        <div id="alert_list_content">
+            <a name="ft" ></a>
+        """
+        else:
+            buffer += """\
         <h2>Alert list</h2>
         <div id="alert_list_content">
             <a name="ft" ></a>
         """
 
+        lang = "en"
+        if is_lang_ja:
+            lang = "ja"
         for alert in reversed(self._alerts):
-            buffer += alert.toHtml()
+            buffer += alert.toHtml(lang)
 
         buffer += """\
             <a name="lt" ></a>
@@ -209,9 +240,7 @@ class Ossec_AlertList(object):
     def _tallyNav(self, histogram, key, description, title):
         tally = histogram.getRaw()
         arsorted_tally_list = sorted(tally.items(), key=lambda x: x[1], reverse=True)
-        print ("### tally ###")
-        print (tally)
-        print(arsorted_tally_list)
+
         buffer = ""
 
         buffer += """
@@ -248,4 +277,6 @@ class Ossec_AlertList(object):
         """
 
         return buffer
-        pass
+
+
+### End of Script ###

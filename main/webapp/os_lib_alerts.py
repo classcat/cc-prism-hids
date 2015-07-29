@@ -40,7 +40,7 @@ from Ossec.AlertList import Ossec_AlertList
 gcounter_alerts = 0
 
 # TODO: This can probably be a method of AlertList
-def __os_createresults(out_file, alert_list):
+def __os_createresults(out_file, alert_list, lang):
     # Opening output file
     myhome  = os.environ['CCPRISM_HOME']
 
@@ -384,7 +384,7 @@ rc_code_hash : %s
 
 
 
-def os_searchalerts(ossec_handle,
+def os_searchalerts(conf,
                         search_id,
                          init_time,   final_time,
                          max_count = 1000,  min_level = 7,   rule_id = None,
@@ -433,7 +433,7 @@ log_pattern : %s
         log_pattern : sshd
         """
 
-    alert_list = Ossec_AlertList()
+    alert_list = Ossec_AlertList(conf)
 
     file_count = 0
     file_list = []
@@ -546,7 +546,7 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
         # If the file does not exist, it must be gzipped so switch to a
         # compressed stream for reading and try again. If that also fails,
         # abort this log file and continue on to the next one.
-        log_file = ossec_handle.ossec_dir + "/" + file
+        log_file = conf.ossec_dir + "/" + file
 #                log_file = ossec_handle['dir'] + "/" + file
 
 
@@ -570,10 +570,10 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
                 output_file[output_count] = "/tmp/output-tmp.%03d-%s-%s.py" % (output_count, alert_list.size(), search_id)
                 #output_file[output_count] = "/tmp/output-tmp.%s-%s-%s.py" % (output_count, alert_list.size(), search_id)
 
-                __os_createresults(output_file[output_count], alert_list)
+                __os_createresults(output_file[output_count], alert_list, conf.lang)
 
                 output_file[0][output_count] = alert_list.size()-1
-                alert_list = Ossec_AlertList()
+                alert_list = Ossec_AlertList(conf)
                 output_count += 1
                 output_file.append(None)
 
@@ -615,7 +615,7 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
     output_file[0][output_count] = alert_list.size() - 1
     output_file.append(None)
 
-    __os_createresults(output_file[output_count], alert_list)
+    __os_createresults(output_file[output_count], alert_list, conf.lang)
 
     output_file[0]['pg'] = output_count
 
@@ -697,14 +697,14 @@ def os_getstoredalerts(ossec_handle, search_id):
     return output_file
 
 
-def os_getalerts(ossec_handle, init_time = 0, final_time = 0, max_count = 30):
+def os_getalerts(conf, init_time = 0, final_time = 0, max_count = 30):
     # TODO: This is always called with init_time=0, final_time=0 and max_count=30.
 
     file = ""
-    alert_list = Ossec_AlertList()
+    alert_list = Ossec_AlertList(conf)
     curr_time = datetime.now()
 
-    log_file = ossec_handle.ossec_dir + "/logs/alerts/alerts.log"
+    log_file = conf.ossec_dir + "/logs/alerts/alerts.log"
     #    log_file = ossec_handle['dir'] + "/logs/alerts/alerts.log"
 
     fobj = None

@@ -195,7 +195,7 @@ class Main(View):
 
         # Getting last alerts
         if is_lang_ja:
-            buffer += "<h2>最新のイベント</h2><br />\n"
+            buffer += "<h2>最新の Alert イベント</h2><br />\n"
         else:
             buffer += "<h2>Latest events</h2><br />\n"
 
@@ -215,8 +215,11 @@ class Main(View):
         alert_count = alert_list.size() - 1
         alert_array  = alert_list.alerts()
 
+        lang = "en"
+        if is_lang_ja:
+            lang = "ja"
         while alert_count >= 0:
-            buffer += alert_array[alert_count].toHtml()
+            buffer += alert_array[alert_count].toHtml(lang)
             alert_count -= 1
 
 
