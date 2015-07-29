@@ -520,7 +520,7 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
 
     # Getting each file
     for file in file_list:
-        print ("Let's check a file %s" % file)
+        #print ("Let's check a file %s" % file)
         # If the file does not exist, it must be gzipped so switch to a
         # compressed stream for reading and try again. If that also fails,
         # abort this log file and continue on to the next one.
@@ -579,10 +579,10 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
 
         # Closing file
         if fobj:
-            print("goint to close %s" % fobj)
+            #print("goint to close %s" % fobj)
             fobj.close()
 
-    print("gcounter_alerts is %s" % gcounter_alerts)
+    #print("gcounter_alerts is %s" % gcounter_alerts)
 
     # Creating last entry
     output_file[output_count] = "/tmp/output-tmp.%03d-%s-%s.py" % (output_count, alert_list.size(), search_id)
@@ -597,7 +597,7 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
 
     output_file[0]['pg'] = output_count
 
-    print(output_file)
+    #print(output_file)
 
     return output_file
 
@@ -670,7 +670,7 @@ def os_getstoredalerts(ossec_handle, search_id):
 
     output_file[0]['pg'] = output_count - 1
 
-    print(output_file)
+    #print(output_file)
 
     return output_file
 
@@ -714,8 +714,8 @@ def os_getalerts(ossec_handle, init_time = 0, final_time = 0, max_count = 30):
                                                         None, None, None, None, None, None, None, None)
             #);
 
-            if alert:
-                alert.dump()
+            #if alert:
+            #    alert.dump()
 
             if alert is None:
                 break

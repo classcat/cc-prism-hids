@@ -13,6 +13,7 @@
 
 import os,sys
 import re
+import traceback
 
 from flask import Flask, session, request, redirect, render_template, url_for
 from flask import jsonify, make_response
@@ -68,7 +69,9 @@ class Main(View):
             buffer += """<div class="smaller2">%s</div><br />""" %  datetime.now().strftime("%m/%d/%Y (%a) %H:%M:%S")
 
         # Geteting syscheck information
-        syscheck_list = os_lib_syscheck.os_getsyscheck(conf)
+        # 後で呼ばれる
+        #syscheck_list = os_lib_syscheck.os_getsyscheck(conf)
+
         #syscheck_list = os_lib_syscheck.os_getsyscheck(ossec_handle)
 
 
@@ -125,13 +128,20 @@ class Main(View):
 
         # Last modified files
         buffer += "<td valign='top' width='55%'><h2>Latest modified files: </h2><br />\n\n"
-        syscheck_list = os_lib_syscheck.os_getsyscheck(conf)
+        syscheck_list = None
+        is_error_syscheck = False
+        try:
+            syscheck_list = os_lib_syscheck.os_getsyscheck(conf)
+        except Exception as e:
+            is_error_syscheck = True
+            traceback.print_exc(file=sys.stdout)
+            buffer += """<span style="color:red;"><b>Error : </b> %s</span>""" % e
 #                syscheck_list = os_lib_syscheck.os_getsyscheck(ossec_handle)
 
 
         #if (len(syscheck_list) == 0) or (len(syscheck_list['global_list']) == 0):
         #    pass
-        if ('global_list' in syscheck_list.keys()) and ('files' in syscheck_list['global_list']):
+        if ((not is_error_syscheck) and 'global_list' in syscheck_list.keys()) and ('files' in syscheck_list['global_list']):
             sk_count = 0
 
             for syscheck in syscheck_list['global_list']['files']:

@@ -66,12 +66,27 @@ class SysCheck(View):
         #ossec_handle = os_lib_handle.os_handle_start(conf.ossec_dir)
         #ossec_handle = os_lib_handle.os_handle_start(ossec_conf.ossec_dir)
 
+        buffer = ""
+
         # Getting syscheck information
-        syscheck_list = os_lib_syscheck.os_getsyscheck(conf)
+
+        syscheck_list = None
+        is_error_syscheck = False
+        try:
+            syscheck_list = os_lib_syscheck.os_getsyscheck(conf)
+        except Exception as e:
+            is_error_syscheck = True
+            buffer += """<span style="color:red;"><b>Error : </b> %s</span>""" % e
+            self.contents = buffer
+            return
+
+        #syscheck_list = os_lib_syscheck.os_getsyscheck(conf)
+
+
 #                syscheck_list = os_lib_syscheck.os_getsyscheck(ossec_handle)
 
 
-        buffer = ""
+
 
         # Creating form
         buffer += """\
@@ -82,7 +97,6 @@ class SysCheck(View):
 """
 
         for agent in syscheck_list.keys():   # global_list, ossec-server
-            print(agent)
             #agent = str(agent)
             sl = ""
             if agent == "global_list":
