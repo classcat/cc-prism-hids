@@ -1,4 +1,26 @@
-#!/usr/bin/env python
+#/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+/* Copyright (C) 2006-2008 Daniel B. Cid <dcid@ossec.net>
+ * All rights reserved.
+ *
+ * This program is a free software; you can redistribute it
+ * and/or modify it under the terms of the GNU General Public
+ * License (version 3) as published by the FSF - Free Software
+ * Foundation
+ */
+"""
+
+##############################################################
+# ClassCat(R) Prism for HIDS
+#  Copyright (C) 2015 ClassCat Co.,Ltd. All rights reseerved.
+##############################################################
+
+# === Notice ===
+# all python scripts were written by masao (@classcat.com)
+#
+# === History ===
 
 import os
 from datetime import *
@@ -683,8 +705,11 @@ def os_getalerts(ossec_handle, init_time = 0, final_time = 0, max_count = 30):
     log_file = ossec_handle.ossec_dir + "/logs/alerts/alerts.log"
     #    log_file = ossec_handle['dir'] + "/logs/alerts/alerts.log"
 
-
-    fobj = open(log_file, 'rb')
+    fobj = None
+    try:
+        fobj = open(log_file + "a", 'rb')
+    except Exception as e:
+        raise Exception("file binary open failed. (os_getalerts#os_lib_alerts) %s" % e)
     #fobj = open(log_file, 'r')
 
     #   If times are set to zero, we monitor the last *count files. */

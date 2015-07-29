@@ -8,7 +8,7 @@
 # all python scripts were written by masao (@classcat.com)
 #
 # === History ===
-#
+# 29-jul-15 : fixed for beta.
 #
 
 import os,sys
@@ -78,7 +78,10 @@ class Main(View):
         buffer += '<table width="95%"><tr><td width="45%" valign="top">'
 
         # Available agents
-        buffer += "<h2>Available&nbsp;agents:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</h2><br />\n\n"
+        if is_lang_ja:
+            buffer += "<h2>利用可能なエージェント:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</h2><br />\n\n"
+        else:
+            buffer += "<h2>Available&nbsp;agents:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</h2><br />\n\n"
 
         # Agent count for java script
         agent_count = 0
@@ -127,7 +130,11 @@ class Main(View):
         buffer += "\n"
 
         # Last modified files
-        buffer += "<td valign='top' width='55%'><h2>Latest modified files: </h2><br />\n\n"
+        if is_lang_ja:
+            buffer += "<td valign='top' width='55%'><h2>最新の変更ファイル: </h2><br />\n\n"
+        else:
+            buffer += "<td valign='top' width='55%'><h2>Latest modified files: </h2><br />\n\n"
+
         syscheck_list = None
         is_error_syscheck = False
         try:
@@ -136,12 +143,17 @@ class Main(View):
             is_error_syscheck = True
             traceback.print_exc(file=sys.stdout)
             buffer += """<span style="color:red;"><b>Error : </b> %s</span>""" % e
-#                syscheck_list = os_lib_syscheck.os_getsyscheck(ossec_handle)
 
+        if is_error_syscheck:
+            pass
 
-        #if (len(syscheck_list) == 0) or (len(syscheck_list['global_list']) == 0):
-        #    pass
-        if ((not is_error_syscheck) and 'global_list' in syscheck_list.keys()) and ('files' in syscheck_list['global_list']):
+        elif (not 'global_list' in syscheck_list.keys()) or (not 'files' in syscheck_list['global_list']):
+            buffer += """<ul class="ulsmall bluez">
+                No integrity checking information available.<br />
+                Nothing reported as changed.
+                </ul>"""
+
+        else:
             sk_count = 0
 
             for syscheck in syscheck_list['global_list']['files']:
@@ -152,8 +164,6 @@ class Main(View):
                     break
 
                 # {'sk_file_name': '/etc/resolv.conf', '_name': 'ossec-server', 'time_stamp': '1437629895'}
-
-                print (syscheck)
 
                 ffile_name = syscheck['sk_file_name']
 
@@ -184,11 +194,23 @@ class Main(View):
         buffer += "<br /> <br />\n"
 
         # Getting last alerts
-        alert_list = os_lib_alerts.os_getalerts(conf, 0, 0, 30)
-#                alert_list = os_lib_alerts.os_getalerts(ossec_handle, 0, 0, 30)
+        if is_lang_ja:
+            buffer += "<h2>最新のイベント</h2><br />\n"
+        else:
+            buffer += "<h2>Latest events</h2><br />\n"
 
+        alert_list = None
+        is_error_alerts = False
+        try:
+            alert_list = os_lib_alerts.os_getalerts(conf, 0, 0, 30)
 
-        buffer += "<h2>Latest events</h2><br />\n"
+        except Exception as e:
+            is_error_alert_list = True
+            traceback.print_exc(file=sys.stdout)
+            buffer += """<span style="color:red;"><b>Error : </b> %s</span>""" % e
+
+            self.contents = buffer
+            return
 
         alert_count = alert_list.size() - 1
         alert_array  = alert_list.alerts()
@@ -199,3 +221,6 @@ class Main(View):
 
 
         self.contents = buffer
+
+
+### End of Script ###
