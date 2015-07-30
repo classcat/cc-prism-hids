@@ -93,13 +93,20 @@ class Search(View):
             if re.search("[a-z0-9]+", str_searchid):
                 USER_searchid = str_searchid   # It might be hex. dont use int().
 
-        is_rt_monitoring = False
 
-        # TODO : real time monitoring t.b. implemented.
+        # TODO : real time monitoring t.b. implemented. : Done (30-jul-15)
         rt_sk = ""
         sv_sk = 'checked="checked"'
-        if self.is_post and ('monitoring' in self.request.form):
-            str_monitoring = self.request.form.get('monitoring')
+
+        is_rt_monitoring = False  # masao added
+        # True の場合は、以下を再設定する：
+        #
+        # $_POST['search'] = "Search";
+        # unset($_POST['initdate']);
+        # unset($_POST['finaldate']);
+
+        if is_post and ('monitoring' in form.keys()):
+            str_monitoring = form.get('monitoring')
             if int(str_monitoring) == 1:
                 is_rt_monitoring = True
 
@@ -112,6 +119,8 @@ class Search(View):
                 USER_monitoring = 1
 
                 # Cleaning up fields
+                # Immutable なので、以下の値を別解釈する
+                #
                 # $_POST['search'] = "Search";
                 # unset($_POST['initdate']);
                 # unset($_POST['finaldate']);
@@ -121,7 +130,7 @@ class Search(View):
                     os_lib_alerts.os_cleanstored(USER_searchid)
 
                 # Refreshing every 90 seconds by default */
-                m_ossec_refresh_time = ossec_conf.ossec_refresh_time * 1000;
+                m_ossec_refresh_time = conf.ossec_refresh_time * 1000;
 
                 buffer += """\
 <script language="javascript">
@@ -133,9 +142,11 @@ class Search(View):
         # Initial Date
         datepattern = "^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}):([0-9]{2})$";
         if is_rt_monitoring:
+            # この場合、initdate は unset されている。
             pass
-        elif self.is_post and ('initdate' in self.request.form):
-            str_initdate = self.request.form.get('initdate')
+
+        elif is_post and ('initdate' in form.keys()):
+            str_initdate = form.get('initdate')
             mobj = re.search(datepattern, str_initdate)
             if mobj:
                 year = int(mobj.group(1))
@@ -146,14 +157,14 @@ class Search(View):
 
                 USER_init = int(time.mktime((year, month, day, hour, minute, 0, 0, 0, -1)))
                 u_init_time = USER_init
-                # to check :
-                # print(datetime.fromtimestamp(u_init_time))
 
         # Final Date
         if is_rt_monitoring:
+            # finaldate は unset されている。
             pass
-        elif self.is_post and ('finaldate' in self.request.form):
-            str_finaldate = self.request.form.get('finaldate')
+
+        elif is_post and ('finaldate' in form.keys()):
+            str_finaldate = form.get('finaldate')
             mobj = re.search(datepattern, str_finaldate)
             if mobj:
                 year = int(mobj.group(1))
@@ -165,82 +176,82 @@ class Search(View):
                 u_final_time = USER_final
 
         # Level
-        if self.is_post and ('level' in self.request.form):
-            str_level = self.request.form.get('level')
+        if is_post and ('level' in form.keys()):
+            str_level = form.get('level')
             if str_level and str_level.isdigit() and (int(str_level) > 0) and (int(str_level) < 16):
-                USER_level = str_level
-                u_level = str_level
+                USER_level = int(str_level)
+                u_level = int(str_level)
 
         # Page
-        if self.is_post and ('page' in self.request.form):
-            str_page = self.request.form.get('page')
+        if is_post and ('page' in form):
+            str_page = form.get('page')
             if str_page and str_page.isdigit() and (int(str_page) > 0) and (int(str_page) <= 999):
-                USER_page = str_page
+                USER_page = int(str_page)
 
         # Pattern
         strpattern = "^[0-9a-zA-Z. _|^!\-()?]{1,128}$"
         intpattern = "^[0-9]{1,8}$"
 
-        if self.is_post and ('strpattern' in self.request.form):
-            str_strpattern = self.request.form.get('strpattern')
+        if is_post and ('strpattern' in form.keys()):
+            str_strpattern = form.get('strpattern')
             if re.search(strpattern, str_strpattern):
                 USER_pattern = str_strpattern
                 u_pattern = USER_pattern
 
         # Getting location
-        if self.is_post and ('locationpattern' in self.request.form):
+        if is_post and ('locationpattern' in form.keys()):
             lcpattern = "^[0-9a-zA-Z. _|^!>\/\\-]{1,156}$"
-            str_locationpattern = self.request.form.get('locationpattern')
+            str_locationpattern = form.get('locationpattern')
             if re.search(lcpattern, str_locationpattern):
                 LOCATION_pattern = str_locationpattern
                 u_location = LOCATION_pattern
 
         # Group pattern
-        if self.is_post and ('grouppattern' in self.request.form):
-            str_grouppattern = self.request.form.get('grouppattern')
+        if is_post and ('grouppattern' in form.keys()):
+            str_grouppattern = form.get('grouppattern')
             if str_grouppattern == "ALL":
                 USER_group = None
             elif re.search(strpattern, str_grouppattern):
                 USER_group = str_grouppattern
-            pass
 
         # Log pattern
-        if self.is_post and ('logpattern' in self.request.form):
-            str_logpattern = self.request.form.get('logpattern')
+        if is_post and ('logpattern' in form.keys()):
+            str_logpattern = form.get('logpattern')
             if str_logpattern == "ALL":
                 USER_log = None
             elif re.search(strpattern, str_logpattern):
                 USER_log = str_logpattern
 
         # Rule pattern
-        if self.is_post and ('rulepattern' in self.request.form):
-            str_rulepattern = self.request.form.get('rulepattern')
+        if is_post and ('rulepattern' in form.keys()):
+            str_rulepattern = form.get('rulepattern')
             if re.search(strpattern, str_rulepattern):
                 USER_rule = str_rulepattern
                 u_rule = USER_rule
 
         # Src ip pattern
-        if self.is_post and ('srcippattern' in self.request.form):
-            str_srcippattern = self.request.form.get('srcippattern')
+        if is_post and ('srcippattern' in form.keys()):
+            str_srcippattern = form.get('srcippattern')
             if re.search(strpattern, str_srcippattern):
                 USER_srcip = str_srcippattern
                 u_srcip = USER_srcip
 
         # User pattern
-        if self.is_post and ('userpattern' in self.request.form):
-            str_userpattern = self.request.form.get('userpattern')
+        if is_post and ('userpattern' in form.keys()):
+            str_userpattern = form.get('userpattern')
             if re.search(strpattern, str_userpattern):
                 USER_user = str_userpattern
                 u_user = USER_user
 
         # Maximum number of alerts
-        if self.is_post and ('max_alerts_per_page' in self.request.form):
-            str_max_alerts_per_page = self.request.form.get('max_alerts_per_page')
+        if is_post and ('max_alerts_per_page' in form.keys()):
+            str_max_alerts_per_page = form.get('max_alerts_per_page')
             if re.search(intpattern, str_max_alerts_per_page):
                 int_max_alerts_per_page = int (str_max_alerts_per_page)
                 if (int_max_alerts_per_page > 200) and (int_max_alerts_per_page < 10000):
+                    # TODO : global に書き換えるのはおかしい？ 元データは変更していないが。
+                    # あくまで conf インスタンスの変数を変更しているだけ。
                     conf.ossec_max_alerts_per_page = int_max_alerts_per_page
-
 
         # Getting search id -- should be enough to avoid duplicates
         if is_rt_monitoring: # 'get('search')  is "Search"
@@ -284,7 +295,7 @@ class Search(View):
         # Printing current date
         buffer += """<div class="smaller2">%s<br/>""" % datetime.now().strftime("%m/%d/%Y %H:%M:%S")
         if USER_monitoring == 1:
-            buffer +=  """ -- Refreshing every %s secs</div><br />""" % ossec_conf.ossec_refresh_time
+            buffer +=  """ -- Refreshing every %s secs</div><br />""" % conf.ossec_refresh_time
         else:
             buffer += "</div><br/>"
 
@@ -452,11 +463,11 @@ timeFormat     :    "24"
         # Getting stored alerts
         if is_rt_monitoring:
             # Getting alerts
-            output_list = os_lib_alerts.os_searchalerts(ossec_handle,
+            output_list = os_lib_alerts.os_searchalerts(conf,
                                                 USER_searchid,
                                                 USER_init,
                                                 USER_final,
-                                                ossec_conf.ossec_max_alerts_per_page,
+                                                conf.ossec_max_alerts_per_page,
                                                 USER_level,
                                                 USER_rule,
                                                 LOCATION_pattern,
