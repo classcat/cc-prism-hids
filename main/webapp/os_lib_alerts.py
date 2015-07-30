@@ -55,6 +55,15 @@ def __os_createresults(out_file, alert_list, lang):
     fobj.close()
 
 """
+ * Attempts to read the next alert matching any specified constraints from the
+ * given file handle.
+
+ * @param integer $curr_time
+ *   Unix timestamp representing the current time. Currently unused.
+
+ * @param string $rule_id
+ *   Regular expression for constraining results by rule ID. This will be used
+ *   in a call to preg_match, but should not include the enclosing '/' tokens.
 
  * @param string $location_pattern
  *   String used for constraining results by location. This will be used in a
@@ -62,8 +71,33 @@ def __os_createresults(out_file, alert_list, lang):
  *   present, the '!' will be stripped and not used in the call to strpos, but
  *   the results of the call will be negated.
 
+ * @param string $str_pattern
+ *   String used for constraining results by message. This will be used in a
+ *   call to strpos, and may contain an initial '!' signifying negation. If
+ *   present, the '!' will be stripped and not used in the call to strpos, but
+ *   the results of the call will be negated.
 
-  * @param string $log_pattern
+ * @param string $group_pattern
+ *   String used for constraining results by event group. This will be used in a
+ *   call to strpos.
+
+ * @param string $group_regex
+ *   String used for constraining results by event group. This will be used in a
+ *   call to preg_match.
+
+ * @param string $srcip_pattern
+ *   String used for constraining results by source IP. This will be used in a
+ *   call to strpos, and may contain an initial '!' signifying negation. If
+ *   present, the '!' will be stripped and not used in the call to strpos, but
+ *   the results of the call will be negated.
+
+ * @param string $user_pattern
+ *   String used for constraining results by user. This will be used in a
+ *   call to strpos, and may contain an initial '!' signifying negation. If
+ *   present, the '!' will be stripped and not used in the call to strpos, but
+ *   the results of the call will be negated.
+
+ * @param string $log_pattern
  *   String used for constraining results by log group. This will be used in a
  *   call to strpos.
 
@@ -81,13 +115,17 @@ def __os_createresults(out_file, alert_list, lang):
 
 def __os_parsealert(fobj, curr_time,
                         init_time, final_time, min_level ,
-                        rule_id,
-                        location_pattern,
-                        str_pattern,
-                        group_pattern, group_regex,
+                        rule_id,  location_pattern,
+                        str_pattern,  group_pattern, group_regex,
                         srcip_pattern, user_pattern,
-                        log_pattern, log_regex,
-                        rc_code_hash):
+                        log_pattern, log_regex,   rc_code_hash):
+
+    # 30-jul-15 : fixed for beta.
+
+    """
+    pattern と regex の違いは、strpos か preg_match か。
+    python 的には文字列の find か re.find か。(re.match は先頭から)
+    """
 
     if False:
         print(">> IN __os_parsealert")
@@ -153,9 +191,6 @@ rc_code_hash : %s
         # Getting event header
         if not buffer.startswith("** Alert"):
             continue
-        #mobj = re.search("^\*\*\sAlert.+", buffer)
-        #if not mobj:
-        #    continue
 
         global gcounter_alerts
         gcounter_alerts += 1
@@ -175,6 +210,7 @@ rc_code_hash : %s
         if (final_time !=  0) and (evt_time > final_time):
             return None
 
+        # Getting group information
         pos = buffer.find("-")
         if pos == -1:
             # Invalid Group
@@ -189,6 +225,7 @@ rc_code_hash : %s
         if group_pattern is not None:
             if evt_group.find (group_pattern) == -1:
                 continue
+
         elif group_regex is not None:
             if not re.search(group_regex.strip("/"), evt_group):
                 continue
@@ -249,14 +286,15 @@ rc_code_hash : %s
         if not evt_level.isdigit():
             continue
 
+        # Checking event level
         evt_level = int(evt_level)
         min_level = int(min_level)
 
-        # Checking event level
         if evt_level < min_level:
             continue
 
         # Getting description
+        # Rule: 5501 (level 3) -> 'Login session opened.'
         tokens2 = buffer.split("->")
         evt_description = tokens2[1].strip().strip("''")
 
@@ -271,6 +309,7 @@ rc_code_hash : %s
             buffer = buffer.strip()
             evt_srcip = buffer[8:]
 
+            #  Validate that string is an IP address
             mobj = re.match('^(\d|[01]?\d\d|2[0-4]\d|25[0-5])\.(\d|[01]?\d\d|2[0-4]\d|25[0-5])\.(\d|[01]?\d\d|2[0-4]\d|25[0-5])\.(\d|[01]?\d\d|2[0-4]\d|25[0-5])$', evt_srcip)
             # if(preg_match("^([1-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(\.([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])){3}^", $evt_srcip))
             if mobj:
@@ -323,17 +362,15 @@ rc_code_hash : %s
         #evt_msg.append(None)
         evt_msg[msg_id] = None
 
-        # masao added :
         pattern_matched = 0
 
-        while(len(buffer)>3):
+        while len(buffer)>3:
             if buffer == "\n":
                 break
 
             if (str_pattern is not None) and (buffer.find(str_pattern) > -1):
                 pattern_matched = 1
 
-            #buffer = buffer.decode('UTF-8')
             evt_msg[msg_id] = buffer.strip().replace('<', "&lt;").replace('>', "&gt;")
 
             buffer = fobj.readline()
@@ -353,7 +390,9 @@ rc_code_hash : %s
                 evt_user = None
                 continue
 
+        #
         # if we reach here, we got a full alert.
+        #
 
         alert = Ossec_Alert()
 
@@ -374,9 +413,6 @@ rc_code_hash : %s
         alert.description = evt_description
         alert.location = evt_location
         alert.msg = list(evt_msg)  # 配列の代入はあり？
-
-        #print (line)
-        #print(alert.dump())
 
         return alert
 
@@ -735,6 +771,11 @@ def os_getalerts(conf, init_time = 0, final_time = 0, max_count = 30):
 
             if alert is None:
                 break
+
+            # __os_parsealert は、  final_time を超えた時に None を返す。
+            #  ただし、init_time と final_time が 0 の時は別。
+            #if (final_time !=  0) and (evt_time > final_time):
+            #    return None
 
             alert_list.addAlert(alert)
 
