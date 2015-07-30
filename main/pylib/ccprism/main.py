@@ -8,6 +8,7 @@
 # all python scripts were written by masao (@classcat.com)
 #
 # === History ===
+# 30-jul-15 : is_main flag added.
 # 29-jul-15 : fixed for beta.
 #
 
@@ -34,7 +35,7 @@ from .view import View
 class Main(View):
 
     def __init__(self, request, conf):
-        super().__init__(request, conf)
+        super().__init__(request, conf, is_main=True)
 
         self._make_contents()
         self._make_html()
