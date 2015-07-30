@@ -8,7 +8,7 @@
 # all python scripts were written by masao (@classcat.com)
 #
 # === History ===
-
+# 31-jul-15 : fixed for beta.
 #
 
 import os,sys
@@ -21,6 +21,7 @@ from datetime import *
 import time
 import uuid
 import hashlib
+import traceback
 
 import os_lib_agent
 import os_lib_alerts
@@ -254,14 +255,14 @@ class Search(View):
                     conf.ossec_max_alerts_per_page = int_max_alerts_per_page
 
         # Getting search id -- should be enough to avoid duplicates
-        if is_rt_monitoring: # 'get('search')  is "Search"
+        if is_rt_monitoring: # 'get('search')  is "Search" if is_rt_monitoring
             m = hashlib.md5()
             m.update(str(uuid.uuid4()).encode('UTF-8'))
             USER_searchid = m.hexdigest()
             USER_page = 1
 
-        elif self.is_post and ('search' in self.request.form):
-            str_search = self.request.form.get('search')
+        elif is_post and ('search' in form.keys()):
+            str_search = form.get('search')
             # ImmutableMultiDict([('initdate', '2015-07-21 15:00'), ('level', '3'), ('search', 'Search'), ('monitoring', '0'), ('finaldate', '2015-07-21 19:00'), ('searchid', '0')])
             if str_search == "Search":
                 # Creating new search id
@@ -276,7 +277,7 @@ class Search(View):
 
             elif str_search == "< Prev":
                 if int(USER_page) > 1:
-                    UESR_page = int(USER_page) - 1
+                    USER_page = int(USER_page) - 1
 
             elif str_search ==  "Next >":
                 USER_page = int(USER_page) + 1
@@ -293,48 +294,73 @@ class Search(View):
                 return
 
         # Printing current date
-        buffer += """<div class="smaller2">%s<br/>""" % datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+        if is_lang_ja:
+            buffer += """<div class="smaller2">現在時刻 : <b>%s</b><br/>""" % datetime.now().strftime("%m/%d/%Y (%a) %H:%M:%S")
+        else:
+            buffer += """<div class="smaller2">%s<br/>""" % datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+
+
         if USER_monitoring == 1:
-            buffer +=  """ -- Refreshing every %s secs</div><br />""" % conf.ossec_refresh_time
+            if is_lang_ja:
+                buffer +=  """ -- <b>%s 秒毎にリフレッシュされます。</b></div><br />""" % conf.ossec_refresh_time
+            else:
+                buffer +=  """ -- Refreshing every %s secs</div><br />""" % conf.ossec_refresh_time
+
         else:
             buffer += "</div><br/>"
 
         # Getting all agents
         agent_list = os_lib_agent.os_getagents(conf)
-        #agent_list = os_lib_agent.os_getagents(ossec_handle)
 
-
-        buffer += "<h2>Alert search options:</h2>\n"
+        if is_lang_ja:
+            buffer += "<h2>Alert 検索オプション:</h2>\n"
+        else:
+            buffer += "<h2>Alert search options:</h2>\n"
 
 
         #################
         ### Search forms ###
         #################
 
+        msg_from = "From:"
+        msg_to = "To:"
+        if is_lang_ja:
+            msg_from = "開始日時 :"
+            msg_to = "最終日時 :"
+
         buffer += """\
         <form name="dosearch" method="post" action="/search">
         <table><tr valign="top">
             <td><input type="radio" name="monitoring" value="0" checked="checked"/></td>
-            <td>From: &nbsp;<input type="text" name="initdate"   id="i_date_a" size="17" value="%s"  maxlength="16"  class="formText" />
+            <td>%s &nbsp;<input type="text" name="initdate"   id="i_date_a" size="17" value="%s"  maxlength="16"  class="formText" />
                 <img src="static/img/calendar.gif" id="i_trigger" title="Date selector"  alt="Date selector" class="formText" /></td>
-            <td>&nbsp;&nbsp;&nbsp;To: &nbsp;<input type="text" name="finaldate" id="f_date_a" size="17" value="%s"  maxlength="16"  class="formText" />
+            <td>&nbsp;&nbsp;&nbsp;%s &nbsp;<input type="text" name="finaldate" id="f_date_a" size="17" value="%s"  maxlength="16"  class="formText" />
                 <img src="static/img/calendar.gif" id="f_trigger" title="Date selector" alt="Date selector" class="formText" /></td>
         </tr>
         """ % (
+                    msg_from,
                     datetime.fromtimestamp(u_init_time).strftime("%Y-%m-%d %H:%M"),
+                    msg_to,
                     datetime.fromtimestamp(u_final_time).strftime("%Y-%m-%d %H:%M")
                 )
 
 
+        msg_rt_monitoring = "Real time monitoring"
+        if is_lang_ja:
+            msg_rt_monitoring = "リアルタイム監視"
         buffer += """<tr><td><input type="radio" name="monitoring" value="1" %s/></td>
-              <td>Real time monitoring</td></tr>
+              <td>%s</td></tr>
               </table>
               <br />
               <table>
-              """ % rt_sk
+              """ % (rt_sk, msg_rt_monitoring)
 
         # Minimum Level
-        buffer += """<tr><td>Minimum level:</td><td><select name="level" class="formText">"""
+        if is_lang_ja:
+            buffer += """<tr><td>最小レベル:</td><td><select name="level" class="formText">"""
+        else:
+            buffer += """<tr><td>Minimum level:</td><td><select name="level" class="formText">"""
+
         if int(u_level) == 1:
             buffer +=  '  <option value="1" selected="selected">All</option>'
         else:
@@ -350,8 +376,11 @@ class Search(View):
 
 
         # Category
-        buffer += """</td><td>
-            Category: </td><td><select name="grouppattern" class="formText">"""
+        if is_lang_ja:
+            buffer += """</td><td>カテゴリ: </td><td><select name="grouppattern" class="formText">"""
+        else:
+            buffer += """</td><td>Category: </td><td><select name="grouppattern" class="formText">"""
+
         buffer += '<option value="ALL" class="bluez">All categories</option>'
 
         for _cat_name, _cat in global_categories.items():
@@ -366,14 +395,19 @@ class Search(View):
 
         buffer += '</select>'
 
-
         # Str pattern
-        buffer += """</td></tr><tr><td>
-            Pattern: </td><td><input type="text" name="strpattern" size="16"
-            value="%s" class="formText" /></td>""" % u_pattern
+        msg_pattern = "Pattern:"
+        if is_lang_ja:
+            msg_pattern = "文字列パターン:"
+        buffer += """</td></tr><tr><td>%s </td><td><input type="text" name="strpattern" size="16"
+            value="%s" class="formText" /></td>""" % (msg_pattern, u_pattern)
 
         # Log formats
-        buffer += '<td>Log formats: </td><td><select name="logpattern" class="formText">'
+        if is_lang_ja:
+            buffer += '<td>ログ・フォーマット: </td><td><select name="logpattern" class="formText">'
+        else:
+            buffer += '<td>Log formats: </td><td><select name="logpattern" class="formText">'
+
         buffer += '<option value="ALL" class="bluez">All log formats</option>'
 
         for _cat_name, _cat in log_categories.items():
@@ -389,42 +423,66 @@ class Search(View):
         buffer += '</select>'
 
         # Srcip pattern
-        buffer += """</td></tr><tr><td>
-            Srcip: </td><td>
-            <input type="text" name="srcippattern" size="16" class="formText"
-                value="%s"/>&nbsp;&nbsp;""" % u_srcip
+        msg_srcip = "Srcip:"
+        if is_lang_ja:
+            msg_srcip = "ソース IP:"
 
-        # Rule pattern
+        buffer += """</td></tr><tr><td>
+            %s </td><td>
+            <input type="text" name="srcippattern" size="16" class="formText"
+                value="%s"/>&nbsp;&nbsp;""" % (msg_srcip, u_srcip)
+
+        # User pattern
+        msg_user = "User:"
+        if is_lang_ja:
+            msg_user = "ユーザ:"
         buffer += """</td><td>
-            User: </td><td><input type="text" name="userpattern" size="8"
-                value="%s" class="formText" /></td></tr>""" % u_user
+            %s </td><td><input type="text" name="userpattern" size="8"
+                value="%s" class="formText" /></td></tr>""" % (msg_user, u_user)
 
         # Location
+        msg_location = "Location:"
+        if is_lang_ja:
+            msg_location = "ログ位置:"
         buffer += """<tr><td>
-            Location:</td><td>
+            %s</td><td>
             <input type="text" name="locationpattern" size="16" class="formText"
-                value="%s"/>&nbsp;&nbsp;""" % u_location
+                value="%s"/>&nbsp;&nbsp;""" % (msg_location, u_location)
 
         # Rule pattern
+        msg_rule = "Rule id:"
+        if is_lang_ja:
+            msg_rule = "ルール Id:"
         buffer += """</td><td>
-            Rule id: </td><td><input type="text" name="rulepattern" size="8"
-                value="%s" class="formText"/>""" % u_rule
+            %s </td><td><input type="text" name="rulepattern" size="8"
+                value="%s" class="formText"/>""" % (msg_rule, u_rule)
 
         # Max alerts
+        msg_max_alerts = "Max Alerts:"
+        if is_lang_ja:
+            msg_max_alerts = "最大 Alert 数:"
         buffer += """'</td></tr><tr><td>
-            Max Alerts:</td>
+            %s</td>
             <td><input type="text" name="max_alerts_per_page" size="8" value="%s" class="formText" /></td></tr>
-        """ % conf.ossec_max_alerts_per_page
-        #ossec_conf.ossec_max_alerts_per_page
+        """ % (msg_max_alerts, conf.ossec_max_alerts_per_page)
 
         # Agent
         # seems not implemented
 
         # Final form
-        buffer += """\
+        #buffer += """\
+        #    <tr><td>
+        #    <input type="submit" name="search" value="Search" class="button" />
+        #"""
+
+        msg_search = "Search"
+        if is_lang_ja:
+            msg_search = "&nbsp;<big>検索</big>&nbsp;"
+
+        buffer += """
             <tr><td>
-            <input type="submit" name="search" value="Search" class="button" />
-        """
+            <button type="submit" name="search" value="Search" class="button" />%s</button>
+        """  % msg_search
 
         buffer += """</td></tr></table>
             <input type="hidden" name="searchid" value="%s" />
@@ -451,17 +509,24 @@ timeFormat     :    "24"
 
         """
 
-        buffer += "<h2>Results:</h2>\n"
+        if is_lang_ja:
+            buffer += "<h2>検索結果:</h2>\n"
+        else:
+            buffer += "<h2>Results:</h2>\n"
+
 
         if (not USER_init) or (not USER_final) or (not USER_level):
-            buffer += "<b>No search performed.</b><br/>\n"
+            if is_lang_ja:
+                buffer += "<b>検索は実行されていません。</b><br/>\n"
+            else:
+                buffer += "<b>No search performed.</b><br/>\n"
             self.contents = buffer
             return
 
         output_list = None
 
         # Getting stored alerts
-        if is_rt_monitoring:
+        if is_rt_monitoring:  # form.get('search') には "Search" が設定されているものとする。
             # Getting alerts
             output_list = os_lib_alerts.os_searchalerts(conf,
                                                 USER_searchid,
@@ -477,17 +542,16 @@ timeFormat     :    "24"
                                                 USER_user,
                                                 USER_log)
 
-        elif self.is_post and ('search' in request.form):
-            str_search = self.request.form.get("search")
+        elif is_post and ('search' in form.keys()):
+            str_search = form.get("search")
 
             if str_search != "Search":
                 output_list = os_lib_alerts.os_getstoredalerts(conf, USER_searchid)
-                #                 output_list = os_lib_alerts.os_getstoredalerts(ossec_handle, USER_searchid)
-
                 used_stored = 1
+
             else:  # Searchiing for new ones
                 # Getting alerts
-                output_list = os_lib_alerts.os_searchalerts(conf, #ossec_handle,
+                output_list = os_lib_alerts.os_searchalerts(conf,
                                     USER_searchid,
                                     USER_init,
                                     USER_final,
@@ -505,14 +569,20 @@ timeFormat     :    "24"
             if used_stored == 1:
                 buffer += "<b class='red'>Nothing returned (search expired). </b><br />\n"
             else:
-                buffer += "<b class='red'>Nothing returned. </b><br />\n"
+                if is_lang_ja:
+                    buffer += "<b class='red'>検索結果は返りませんでした。(Nothing returned.)</b><br />\n"
+                else:
+                    buffer += "<b class='red'>Nothing returned. </b><br />\n"
 
             self.contents = buffer
             return
 
         # Checking for no return
         if not 'count' in output_list[0]:
-            buffer += "<b class='red'>Nothing returned. </b><br />\n"
+            if is_lang_ja:
+                buffer += "<b class='red'>検索結果は返りませんでした。(Nothing returned.)</b><br />\n"
+            else:
+                buffer += "<b class='red'>Nothing returned. </b><br />\n"
             self.contents = buffer
             return
 
@@ -523,19 +593,28 @@ timeFormat     :    "24"
         # Page 1 will become the latest and the latest, page 1
         real_page = (output_list[0]['pg'] + 1) - USER_page
 
-        buffer += "<b>Total alerts found: </b>%s<br />" % output_list[0]['count']
+        if is_lang_ja:
+            buffer += "<b>Alerts 総計: </b>%s<br />" % output_list[0]['count']
+        else:
+            buffer += "<b>Total alerts found: </b>%s<br />" % output_list[0]['count']
 
         if output_list[0]['pg'] > 1:
-            buffer += "<b>Output divided in </b>%s pages.<br/>" % output_list[0]['pg']
+            if is_lang_ja:
+                buffer += "<b>出力は</b>%s <b>ページに分割されます。</b><br/>" % output_list[0]['pg']
+            else:
+                buffer += "<b>Output divided in </b>%s pages.<br/>" % output_list[0]['pg']
 
             buffer += '<br /><form name="dopage" method="post" action="/search">'
 
             buffer += """\
                 <input type="submit" name="search" value="<< First" class="button" class="formText" />
 
-                <input type="submit" name="search" value="< Prev" class="button" class="formText" />
+                <input type="submit" name="search" value="< Prev" class="button" class="formText" />"""
 
-                Page <b>%s</b> (%s alerts)""" % (USER_page, output_list[0][real_page])
+            if is_lang_ja:
+                buffer += " <b>%s</b> ページ (%s alerts)" % (USER_page, output_list[0][real_page])
+            else:
+                buffer += " Page <b>%s</b> (%s alerts)" % (USER_page, output_list[0][real_page])
 
         # Currently page
         buffer += """\
@@ -567,18 +646,17 @@ timeFormat     :    "24"
         # Checking if page exists
         target = output_list[real_page]
         target_file = os.environ['CCPRISM_HOME'] + target
-        print("real_page is %s" %real_page)
-        print("target_file is " + target_file)
-        print(output_list[0].keys())
-        if 'count' in output_list[0].keys():
-            print("count key exists.")
-        if 'pg' in output_list[0].keys():
-            print ('pg key exists')
-        if real_page in output_list[0].keys():
-            print("real_page key exists.")
+
+        #if 'count' in output_list[0].keys():
+        #    print("count key exists.")
+        #if 'pg' in output_list[0].keys():
+        #    print ('pg key exists')
+        #if real_page in output_list[0].keys():
+        #    print("real_page key exists.")
+
         if (not real_page in  output_list[0].keys()) or (len(target) < 5) or (not os.path.exists(target_file)):
         #if (not output_list[0][real_page]) or (len(target) < 5) or (not os.path.exists(target_file)):
-            print("heyheyhey")
+
             buffer += "<b class='red'>Nothing returned (or search expired). (* 1)</b><br />\n"
 
             self.contents = buffer
@@ -589,18 +667,24 @@ timeFormat     :    "24"
         # Printing page
         # TODO: There are functions for slurping file contents.
 
-        fobj = open(target_file, 'r')
+        fobj = None
+        target_buffer = ""
+        try:
+            fobj = open(target_file, 'r')
+            target_buffer = fobj.read()
+            fobj.close()
 
-        target_buffer = fobj.read()
-
-        fobj.close()
+        except Exception as e:
+            target_buffer = "<span style=\"color:red;\"><b>Unexpected error (search.py)</b> %s</span>" % e
+            traceback.print_exc(file=sys.stdout)
 
         buffer += target_buffer
 
         self.contents = buffer
 
 
+    #def xgetHtml(self):
+    #    return self.html
 
 
-    def xgetHtml(self):
-        return self.html
+### End of Script ###
