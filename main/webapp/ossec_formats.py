@@ -1,45 +1,31 @@
+#/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 """
-/**
- * Ossec Framework
+/* Copyright (C) 2006-2008 Daniel B. Cid <dcid@ossec.net>
+ * All rights reserved.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * @category   Ossec
- * @package    Ossec
- * @version    $Id: Histogram.php,v 1.3 2008/03/03 15:12:18 dcid Exp $
- * @author     Chris Abernethy
- * @copyright  Copyright (c) 2007-2008, Daniel B. Cid <dcid@ossec.net>, All rights reserved.
- * @license    http://www.gnu.org/licenses/gpl-3.0.txt GNU Public License
+ * This program is a free software; you can redistribute it
+ * and/or modify it under the terms of the GNU General Public
+ * License (version 3) as published by the FSF - Free Software
+ * Foundation
  */
 """
 
 ##############################################################
-#  Copyright C) 2015 Masashi Okumura All rights reseerved.
+# ClassCat(R) Prism for HIDS
+#  Copyright (C) 2015 ClassCat Co.,Ltd. All rights reseerved.
 ##############################################################
 
+# === Notice ===
+# all python scripts were written by masao (@classcat.com)
+#
+# === History ===
+# 30-jul-15 : fixed for beta
+#
 
 from collections import OrderedDict
 
-"""
-/**
- * This variable is an array keyed on category name, and each element is another
- * array keyed on sub-category name. The values of the subcategory arrays are
- * tags identifying event groups to be used to constrain search results. These
- * tags can be either plain strings or regular expressions to be used in a call
- * to preg_match (minus the enclosing '/' tokens).
- */
-"""
 
 log_categories = OrderedDict([
     ("Syslog", OrderedDict([
@@ -104,3 +90,5 @@ log_categories = OrderedDict([
 
 ]
 )
+
+### End of Script ###
