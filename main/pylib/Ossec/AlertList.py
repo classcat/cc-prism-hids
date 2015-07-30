@@ -36,6 +36,7 @@
 # 29-jul-15 :  src ip 毎の集計
 #
 # === History ===
+# 30-jul-15 : fixed for beta.
 #
 
 from datetime import *
@@ -159,7 +160,7 @@ class Ossec_AlertList(object):
 
         buffer += """\
 
-        <script type="text/javascript">
+<script type="text/javascript">
 
             // Get a list of all key/id combos. This is used in the Show
             // Only and Clear Restrictions functionality.
@@ -229,9 +230,7 @@ class Ossec_AlertList(object):
                 })
             });
 
-        </script>
-
-
+</script>
         """
 
         return buffer
@@ -251,8 +250,7 @@ class Ossec_AlertList(object):
         """ % (title, title)
 
         for _id, count in arsorted_tally_list:
-            print("_id is %s" % _id)
-            print("count is %s" % count)
+
             buffer += """
                 <div id="showing_%s_%s" class="asmall">
                         Showing %s alert(s) from <b>%s %s</b>
