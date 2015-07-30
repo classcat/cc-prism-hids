@@ -633,21 +633,16 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
  *   A randomly-generated unique search ID or NULL.
  """
 def  os_cleanstored(search_id = None):
-
-    #if (MYDEBUG):
-    #    print(">> IN os_cleanstored")
-    #    print(os.environ["CCPRISM_HOME"])
+    # @30-jul15 : fixed for beta
 
     if search_id is not None:
-        pass
+        for file in glob.glob(os.environ["CCPRISM_HOME"] + ("/tmp/output-tmp.*-*-%s.py" % search_id)):
+            os.unlink(file)
 
     else:
         for file in glob.glob(os.environ["CCPRISM_HOME"] + "/tmp/*.py"):
             if int(os.stat(file).st_mtime) < (int(time.time()) - 1800):
                 os.unlink(file)
-
-
-    pass
 
 
 def os_getstoredalerts(ossec_handle, search_id):
@@ -698,26 +693,28 @@ def os_getstoredalerts(ossec_handle, search_id):
 
 
 def os_getalerts(conf, init_time = 0, final_time = 0, max_count = 30):
+    # 30-jul-15 : fixed for beta
+
     # TODO: This is always called with init_time=0, final_time=0 and max_count=30.
 
     file = ""
     alert_list = Ossec_AlertList(conf)
     curr_time = datetime.now()
 
+    # Getting log dir
     log_file = conf.ossec_dir + "/logs/alerts/alerts.log"
-    #    log_file = ossec_handle['dir'] + "/logs/alerts/alerts.log"
 
+    # Opening alert file
     fobj = None
     try:
         fobj = open(log_file, 'rb')
     except Exception as e:
         raise Exception("file binary open failed. (os_getalerts#os_lib_alerts) %s" % e)
-    #fobj = open(log_file, 'r')
 
     #   If times are set to zero, we monitor the last *count files. */
     if init_time == 0  and final_time == 0:
-        # clearstatcache()
-        # os_cleanstored()
+        # clearstatcache() # php specific
+        os_cleanstored()
 
         # Getting file size
         info = os.stat(log_file)
@@ -727,32 +724,24 @@ def os_getalerts(conf, init_time = 0, final_time = 0, max_count = 30):
         f_point = max_count * 325
 
         #  If file size is large than the counter fseek to the average place in the file.
-
         if f_size > f_point:
             seek_place = f_size - f_point
             fobj.seek(seek_place, 0)
-            # １行だけ捨てても無意味なので注意
-            #tmpbuf_to_discard = fobj.readline()
-            #print(tmpbuf_to_discard)
-        pass
+            # １行だけ捨てても無意味なので注意 -  複数行にまたがる
 
         while True:
             alert = __os_parsealert(fobj, curr_time, init_time, final_time, 0, None, None,
                                                         None, None, None, None, None, None, None, None)
-            #);
-
-            #if alert:
-            #    alert.dump()
 
             if alert is None:
                 break
 
             alert_list.addAlert(alert)
-            pass
 
-    fobj.close()
+    if fobj:
+        fobj.close()
+
     return alert_list
-    pass
 
 
 ### End of Script ###
