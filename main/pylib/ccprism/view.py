@@ -108,10 +108,11 @@ class View(object):
 <!-- END of FOOTER -->
 """
 
-    def __init__(self, request, conf):
+    def __init__(self, request, conf, is_main=False):
 
         self.request = request
         self.conf = conf
+        self.is_main = is_main
 
         self.lang = conf.lang
         #self.lang = conf['lang']
@@ -135,6 +136,10 @@ class View(object):
         tmpl_header = View.HEADER
         tmpl_footer = View.FOOTER
 
+        meta_refresh = ""
+        if self.is_main:
+            meta_refresh = '    <meta http-equiv="refresh" content="90" />'
+
         if self.is_lang_ja:
             tmpl_head = View.HEAD_JA
             tmpl_header = View.HEADER_JA
@@ -144,6 +149,7 @@ class View(object):
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
+%s
 %s
 </head>
 
@@ -172,7 +178,7 @@ class View(object):
 </div>
 </body>
 </html>
-""" % (tmpl_head, tmpl_header, self.contents, tmpl_footer)
+""" % (tmpl_head, meta_refresh, tmpl_header, self.contents, tmpl_footer)
         pass
 
     def getHtml(self):
