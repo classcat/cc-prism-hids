@@ -36,6 +36,7 @@
 # 29-jul-15 :  src ip 毎の集計
 #
 # === History ===
+# BUG FIX : 30-jul-15 : earliest - out of ranage,  lastest
 # 30-jul-15 : fixed for beta.
 #
 
@@ -82,7 +83,11 @@ class Ossec_AlertList(object):
 
 
     def earliest(self):
-        return self._alerts[0]
+        # 30-jul-15 : Considering  _alerts[0] out of range
+        if len(self._alerts) > 0:
+            return self._alerts[0]
+        else:
+            return None
 
 
     def latest(self):
@@ -100,10 +105,12 @@ class Ossec_AlertList(object):
         buffer = ""
 
         first = self.earliest()
-        first = datetime.fromtimestamp(int(first.time)).strftime("%m/%d/%Y %H:%M:%S")
+        if first is not None:
+            first = datetime.fromtimestamp(int(first.time)).strftime("%m/%d/%Y %H:%M:%S")
 
         last = self.latest()
-        last = datetime.fromtimestamp(int(last.time)).strftime("%m/%d/%Y %H:%M:%S")
+        if last is not None:
+            last = datetime.fromtimestamp(int(last.time)).strftime("%m/%d/%Y %H:%M:%S")
 
         buffer += """<div id="alert_list_nav">"""
 

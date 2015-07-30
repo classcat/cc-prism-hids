@@ -1,32 +1,15 @@
-"""
-/**
- * Ossec Framework
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * @category   Ossec
- * @package    Ossec
- * @version    $Id: Histogram.php,v 1.3 2008/03/03 15:12:18 dcid Exp $
- * @author     Chris Abernethy
- * @copyright  Copyright (c) 2007-2008, Daniel B. Cid <dcid@ossec.net>, All rights reserved.
- * @license    http://www.gnu.org/licenses/gpl-3.0.txt GNU Public License
- */
-"""
 
 ##############################################################
-#  Copyright C) 2015 Masashi Okumura All rights reseerved.
+# ClassCat(R) Prism for HIDS
+#  Copyright (C) 2015 ClassCat Co.,Ltd. All rights reseerved.
 ##############################################################
+
+# ===  Notice ===
+# all python scripts were written by masao (@classcat.com)
+#
+# === History ===
+
+#
 
 import os,sys
 import re
@@ -39,11 +22,8 @@ import time
 import uuid
 import hashlib
 
-#import ossec_conf
-import os_lib_handle
 import os_lib_agent
 import os_lib_alerts
-#import os_lib_syscheck
 
 from ossec_categories import global_categories
 from ossec_formats import log_categories
@@ -60,14 +40,15 @@ class Search(View):
 
 
     def _make_contents(self):
+        req    = self.request
+        conf  = self.conf
 
-        conf = self.conf
+        form  = req.form
 
-        # Starting handle
-        #ossec_handle = os_lib_handle.os_handle_start(conf.ossec_dir)
-#                ossec_handle = os_lib_handle.os_handle_start(conf['ossec_dir'])
+        is_post = self.is_post
+        is_lang_ja = self.is_lang_ja
 
-        #ossec_handle = os_lib_handle.os_handle_start(ossec_conf.ossec_dir)
+        buffer = ""
 
         if not conf.check_dir():
             if is_lang_ja:
@@ -79,10 +60,7 @@ class Search(View):
 
         # Iniitializing some variables
         u_final_time = int(time.time())
-        #u_final_time = int(time.mktime(datetime.now().timetuple()))
         u_init_time   = int(u_final_time  - conf.ossec_search_time) # 14400 = 3600 * 4
-        #         u_init_time   = int(u_final_time  - ossec_conf.ossec_search_time) # 14400 = 3600 * 4
-
 
         u_level = conf.ossec_search_level # ossec_conf.ossec_search_level   # 7
         u_pattern = ""
@@ -94,7 +72,8 @@ class Search(View):
         # masao added the folloings :
         USER_final = 0
         USER_init = 0
-        USER_level = ""
+        USER_level = 0
+        #USER_level = ""
 
         USER_pattern = None
         LOCATION_pattern = None
@@ -108,11 +87,9 @@ class Search(View):
         USER_monitoring = 0
         used_stored = 0
 
-        buffer = ""
-
         # Getting search id
-        if self.is_post and ('searchid' in self.request.form):
-            str_searchid = self.request.form.get('searchid')
+        if is_post and ('searchid' in form.keys()):
+            str_searchid = form.get('searchid')
             if re.search("[a-z0-9]+", str_searchid):
                 USER_searchid = str_searchid   # It might be hex. dont use int().
 
