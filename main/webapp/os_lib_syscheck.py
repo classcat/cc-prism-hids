@@ -31,16 +31,29 @@ import traceback
 
 from collections import OrderedDict
 
-def __os_getdb(file, _name):
+def __os_getdb(file, _name, conf):
+    # 31-jul-15 : fixed for beta
+    
     db_list = OrderedDict()
     mod_list = OrderedDict()
     db_count = 0
     set_size = 1
 
-    fobj = open(file, 'r')
+    fobj = None
+    try:
+        fobj = open(file, 'r')
+    except Exception as e:
+        raise Exception("file open failed. %s (__os_getdb#os_lib_syscheck)" % e)
+
+    # No size for windows registry
+    pos = _name.find("registry")
+    if pos >= 0:
+        set_size = 0
 
     # Database pattern
     skpattern = "^\S\S\S(\d+):(\d+):(\d+:\d+):(\S+):(\S+) \!(\d+) (.+)$"
+
+    # +++17:33188:0:0:669a5c3a6ffa8b5b5ce263057934d118:84cbee308cfa037d3bf2f13d383f29e6b532a91a !1435745499 /etc/insserv.conf.d/rpcbind
 
     while True:
         line = fobj.readline()
@@ -56,16 +69,15 @@ def __os_getdb(file, _name):
         mobj = re.search(skpattern, line)
         if mobj:
             sk_file_size =  mobj.group(1)
-            sk_file_perm  = mobj.group(2)
-            sk_file_owner = mobj.group(3)
+            sk_file_perm  = mobj.group(2)  # 33188
+            sk_file_owner = mobj.group(3)  # 0:0
             sk_file_md5   = mobj.group(4)
             sk_file_sha1  = mobj.group(5)
             time_stamp   = mobj.group(6)
             sk_file_name = mobj.group(7)
 
-            #print(sk_file_name)
-
-            if sk_file_name in db_list:
+            if sk_file_name in db_list.keys():
+                # mod_list は OrderedDict
                 mod_list[time_stamp] = {0:db_count, 1:sk_file_name}
                 #mod_list.append({'time_stamp':{0:db_count, 1:sk_file_name}})
 
@@ -77,77 +89,90 @@ def __os_getdb(file, _name):
                 db_list[sk_file_name]['sum'] = "%s<br />&nbsp;&nbsp; -> &nbsp;&nbsp;<br /> md5 %s <br />sha1 %s" % (db_list[sk_file_name]['sum'], sk_file_md5, sk_file_sha1)
 
             else:
-                #print("heyhneyhey")
+
                 db_list[sk_file_name] = {}
                 db_list[sk_file_name]['time'] = time_stamp
                 db_list[sk_file_name]['size'] = sk_file_size
                 db_list[sk_file_name]['sum'] = "md5 %s<br /> sha1 %s" % (sk_file_md5, sk_file_sha1)
-                pass
 
             db_count += 1
 
-    fobj.close()
+    if fobj:
+        fobj.close()
 
+    #
     # Prinitng latest files
+    #
+    is_lang_ja = False
+    if conf.lang == "ja":
+        is_lang_ja = True
+
     buffer = ""
 
     buffer += "         <br /><br />"
-    buffer += "     <h2>Latest modified files:</h2><br />"
+
+    if is_lang_ja:
+        buffer += "     <h2>最新の変更ファイル:</h2><br />"
+    else:
+        buffer += "     <h2>Latest modified files:</h2><br />"
 
     #   mod_list['time_stamp'] = {0:db_count, 1:sk_file_name}
     mod_list_keys = mod_list.keys()
     mod_list_keys_sorted = sorted(mod_list_keys, reverse=True)
-    for ts in mod_list_keys_sorted:
-        record = mod_list[ts]
 
-        ts2 = datetime.datetime.fromtimestamp(int(ts)).strftime("%m/%d/%Y %H:%M")
+    for mod_date in mod_list_keys_sorted:
+        val = mod_list[mod_date]
 
-        buffer += "<b>%s&nbsp;&nbsp;</b>" % ts2
-        buffer += """ <a class="bluez" href="#id_%s">%s</a><br/>""" % (record[0], record[1])
-        #print (mod_list[ts])
+        mod_date2 = datetime.datetime.fromtimestamp(int(mod_date)).strftime("%m/%d/%Y %H:%M")
 
+        buffer += "<b>%s</b>&nbsp;&nbsp;" % mod_date2
+        buffer += """ <a class="bluez" href="#id_%s">%s</a><br/>""" % (val[0], val[1])  # db_count(index), sk_file_name
 
-
-    #for key in mod_list_keys:
-    #    print (key)
-    #print(mod_list_keys)
-
-    buffer += "\n<br /><h2>Integrity Checking database: %s</h2>\n" % _name
+    if is_lang_ja:
+        buffer += "\n<br /><h2>整合性チェック用データベース: %s</h2>\n" % _name
+    else:
+        buffer += "\n<br /><h2>Integrity Checking database: %s</h2>\n" % _name
 
     # Printing db
     buffer += '<br /><br /><table width="100%">'
-    buffer += """        <tr>
+
+    if is_lang_ja:
+        buffer += """        <tr>
+           <th>ファイル名</th>
+           <th>チェックサム</th>"""
+    else:
+        buffer += """        <tr>
            <th>File name</th>
            <th>Checksum</th>"""
 
     if set_size == 1:
-        buffer += "<th>Size</th>"
+        if is_lang_ja:
+            buffer += "<th>サイズ</th>"
+        else:
+            buffer += "<th>Size</th>"
 
     buffer += "</tr>"
 
     # Dumping for each entry
     db_count = 0
     for list_name, list_val in db_list.items():
-        #print(list_name)
+
         sk_class = ">"
         sk_point = ""
 
         if (db_count % 2) == 0:
             sk_class = 'class="odd">'
 
-        if "ct" in list_val:
+        if "ct" in list_val.keys():
             sk_point = """<a id="id_%s" />""" % list_val['ct']
 
         buffer += """\
             <tr %s<td width="45%%" valign="top">%s%s</td>
             <td width="53%%" valign="top">%s</td>
         """ % (sk_class, sk_point, list_name, list_val['sum'])
-        #buffer += """\
-        #<tr %s<td width="45\%" valign="top">%s%s</td><td width="53\%" valign="top">%s</td>""" % (sk_class, #sk_point, list_name, list_val['sum'])
 
         if set_size == 1:
             buffer += """<td width="2%%" valign="top">%s</td>""" % (list_val['size'])
-            pass
 
         buffer += "</tr>"
 
@@ -269,42 +294,64 @@ def __os_getchanges(file, g_last_changes, _name):
 
 
 # Dump syscheck db
-def os_syscheck_dumpdb(ossec_handle, agent_name):
+def os_syscheck_dumpdb(conf, agent_name):
+    # 31-jul-15 : fixed for beta
+    """
+    in python version, buffer will be returned instead of list.
+    """
+
     #$dh = NULL;
     file = "";
     syscheck_list = []
     syscheck_count = 0
 
-    sk_dir = ossec_handle.ossec_dir + "/queue/syscheck"
-    #     sk_dir = ossec_handle['dir'] + "/queue/syscheck"
-
+    sk_dir = conf.ossec_dir + "/queue/syscheck"
 
     buffer = ""
 
     # Getting all agent files
-    filelist = os.listdir(sk_dir)
+    filelist = None
+    try:
+        filelist = os.listdir(sk_dir)
+    except Exception as e:
+        raise Exception("listdir failed : %s (os_syscheck_dumpdb#os_lib_syscheck)" % e)
+
+    # 該当エージェントの db のみを見る
     for file in filelist:
         _name = ""
         if file[0] == '.':
             continue
 
-        if file == "syscheck":
-            _name = "ossec-server"
+        filepattern = "^\(([\.a-zA-Z0-9_-]+)\) " + "([0-9\._]+|any)->([a-zA-Z_-]+)$";
+
+        regs = re.match(filepattern, file)
+        if regs:
+            if regs.group(2) == "syscheck-registry":
+                _name = regs.group(1) + " Windows registry"
+            else:
+                _name = regs.group(1)
+
         else:
-            continue
+            if file == "syscheck":
+                _name = "ossec-server"
+            else:
+                continue
 
         # Looing for agent name
         if _name != agent_name:
             continue
 
-        (syscheck_list, buffer2) = __os_getdb(sk_dir + "/" + file, _name)
+        (syscheck_list, buffer2) = __os_getdb(sk_dir + "/" + file, _name, conf)
         buffer += buffer2
 
-        # syscheck_list will not be used ...
+        # syscheck_list would not be used ...
+        # return($syscheck_list);
+        return buffer
 
-    #buffer = "nyaochan"
-    return buffer
-    pass
+    # 該当エージェントの db のみを見るので、loop の最後で返した効率が良いことになる。
+    #return buffer
+    # control will never reach here
+    return None
 
 
 def os_getsyscheck(conf):

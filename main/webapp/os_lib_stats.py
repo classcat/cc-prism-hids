@@ -10,7 +10,7 @@ import glob
 
 from collections import OrderedDict
 
-from mydebug import MYDEBUG
+#from mydebug import MYDEBUG
 
 from Ossec.Alert import Ossec_Alert
 from Ossec.AlertList import Ossec_AlertList

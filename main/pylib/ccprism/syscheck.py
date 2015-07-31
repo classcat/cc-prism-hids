@@ -1,12 +1,23 @@
+##############################################################
+# ClassCat(R) Prism for HIDS
+#  Copyright (C) 2015 ClassCat Co.,Ltd. All rights reseerved.
+##############################################################
+
+# ===  Notice ===
+# all python scripts were written by masao (@classcat.com)
+#
+# === History ===
+
+#
 
 import os,sys
 import re
+import traceback
+import datetime
 
 from flask import Flask, session, request, redirect, render_template, url_for
 from flask import jsonify, make_response
 
-import datetime
-#import ossec_conf
 import os_lib_handle
 import os_lib_syscheck
 
@@ -20,21 +31,15 @@ class SysCheck(View):
         self._make_contents()
         self._make_html()
 
-    def _make_contents(self):
 
+    def _make_contents(self):
         req = self.request
-        form = req.form
         conf = self.conf
 
-        #<form name="dosearch" method="post" action="index.php?f=i">
-        #<table><tr valign="top">
-        #<td>
-        #Agent name: </td><td><select name="agentpattern" class="formText"><option value="ossec-server"  selected="selected"> &nbsp; ossec-server</option>
-        #</select></td>
-        #<td><input type="submit" name="ss" value="Dump database" class="button"/>
-        #</td>
-        #</tr></table>
-        #</form>
+        form = req.form
+
+        is_post = self.is_post
+        is_lang_ja = self.is_lang_ja
 
         # Initializing variables
         u_agent = "ossec-server"
@@ -44,16 +49,18 @@ class SysCheck(View):
 
         # Getting user patterns
         strpattern = "^[0-9a-zA-Z._^ -]{1,128}$"
-        if request.method == 'POST':
-            agentpattern = request.form.get('agentpattern')
-            if not agentpattern:
-                raise Exception("something is wrong in agentpattern")
+        if is_post and ('agentpattern' in form.keys()):
+            agentpattern = form.get('agentpattern')
             if re.search(strpattern, agentpattern):
                 USER_agent = agentpattern
                 u_agent = USER_agent
 
-            #filepattern
-            pass
+        if is_post and ('filepattern' in form.keys()):
+            filepattern = form.get('filepattern')
+            if re.search(strpattern, filepattern):
+                u_file = USER_file
+
+        buffer = ""
 
         # Starting handle
         if not conf.check_dir():
@@ -63,44 +70,35 @@ class SysCheck(View):
                 buffer += "Unable to access ossec directory.\n"
             self.contents = buffer
             return
-        #ossec_handle = os_lib_handle.os_handle_start(conf.ossec_dir)
-        #ossec_handle = os_lib_handle.os_handle_start(ossec_conf.ossec_dir)
-
-        buffer = ""
 
         # Getting syscheck information
-
         syscheck_list = None
         is_error_syscheck = False
         try:
             syscheck_list = os_lib_syscheck.os_getsyscheck(conf)
         except Exception as e:
             is_error_syscheck = True
+            traceback.print_exc(file=sys.stdout)
+
             buffer += """<span style="color:red;"><b>Error : </b> %s</span>""" % e
             self.contents = buffer
             return
 
-        #syscheck_list = os_lib_syscheck.os_getsyscheck(conf)
-
-
-#                syscheck_list = os_lib_syscheck.os_getsyscheck(ossec_handle)
-
-
-
-
         # Creating form
+        msg_agent_name = "Agent name:"
+        if is_lang_ja:
+            msg_agent_name = "エージェント名:"
         buffer += """\
         <form name="dosearch" method="post" action="syscheck">
         <table><tr valign="top">
-        <td>Agent name: </td>
+        <td>%s </td>
         <td><select name="agentpattern" class="formText">
-"""
+""" % (msg_agent_name)
 
         for agent in syscheck_list.keys():   # global_list, ossec-server
-            #agent = str(agent)
             sl = ""
             if agent == "global_list":
-                break
+                continue
             elif u_agent == agent:
                 sl = ' selected ="selected"'
 
@@ -108,7 +106,11 @@ class SysCheck(View):
 
         buffer += "</select></td>"
 
-        buffer += """    <td><input type="submit" name="ss" value="Dump database" class="button"/>"""
+        msg_dump_db = "Dump database"
+        if is_lang_ja:
+            msg_dump_db = "&nbsp;データベースのダンプ&nbsp;"
+        buffer += """    <td>&nbsp;<button type="submit" name="ss" value="Dump database" class="button"/>%s</button>""" % (msg_dump_db)
+        #buffer += """    <td><input type="submit" name="ss" value="Dump database" class="button"/>"""
 
         if USER_agent is not None:
             buffer += """&nbsp; &nbsp;<a class="bluez" href="syscheck"> &lt;&lt;back</a>"""
@@ -120,15 +122,18 @@ class SysCheck(View):
     """
 
         # Dumping database
-        if request.method == 'POST':
-            if (request.form.get('ss') == "Dump database") and (USER_agent is not None):
-                dump_buffer = os_lib_syscheck.os_syscheck_dumpdb(conf, USER_agent)
-                #dump_buffer = os_lib_syscheck.os_syscheck_dumpdb(ossec_handle, USER_agent)
-
+        if is_post and ('ss' in form.keys()):
+            if (form.get('ss') == "Dump database") and (USER_agent is not None):
+                try:
+                    dump_buffer = os_lib_syscheck.os_syscheck_dumpdb(conf, USER_agent)
+                except Exception as e:
+                    traceback.print_exc(file=sys.stdout)
+                    buffer += """<br><span style="color:red;"><b>Unexpected Error</b> : %s</span><br/>""" % e
+                    self.contents = buffer
+                    return
 
                 self.contents = buffer + dump_buffer
                 return
-            pass
 
         buffer += "<br /><h2>Latest modified files (for all agents): </h2>\n\n"
 
