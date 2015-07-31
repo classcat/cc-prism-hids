@@ -39,9 +39,9 @@ from collections import OrderedDict
 from Ossec.Alert import Ossec_Alert
 from Ossec.AlertList import Ossec_AlertList
 
+
 def __os_parsestats(fobj, month_hash):
-    print (fobj)
-    print (month_hash)
+    # 01-aug-15 : fixed for beta
 
     daily_hash = OrderedDict()
 
@@ -126,9 +126,6 @@ def __os_parsestats(fobj, month_hash):
     month_hash['alerts'] += daily_hash['alerts']
     month_hash['firewall'] += daily_hash['firewall']
     month_hash['syscheck'] += daily_hash['syscheck']
-
-    #print ("-vvvvvvvvvvvvvvvvv")
-    #print(month_hash['total'])
 
     return (daily_hash)
 
