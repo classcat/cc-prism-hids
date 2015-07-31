@@ -8,6 +8,7 @@
 # all python scripts were written by masao (@classcat.com)
 #
 # === History ===
+# 31-jul-15 : added exception handlers.
 # 31-jul-15 : fixed for beta.
 #
 
@@ -524,6 +525,7 @@ timeFormat     :    "24"
             return
 
         output_list = None
+        #is_error_search = False # masao
 
         # Getting stored alerts
         if is_rt_monitoring:  # form.get('search') には "Search" が設定されているものとする。
@@ -546,12 +548,16 @@ timeFormat     :    "24"
             str_search = form.get("search")
 
             if str_search != "Search":
-                output_list = os_lib_alerts.os_getstoredalerts(conf, USER_searchid)
+                # ossec_handle is not necessary here.
+                output_list = os_lib_alerts.os_getstoredalerts(USER_searchid)
+                # output_list = os_lib_alerts.os_getstoredalerts(conf, USER_searchid)
+
                 used_stored = 1
 
             else:  # Searchiing for new ones
                 # Getting alerts
-                output_list = os_lib_alerts.os_searchalerts(conf,
+                try:
+                    output_list = os_lib_alerts.os_searchalerts(conf,
                                     USER_searchid,
                                     USER_init,
                                     USER_final,
@@ -564,6 +570,14 @@ timeFormat     :    "24"
                                     USER_srcip,
                                     USER_user,
                                     USER_log)
+                except Exception as e:
+                    is_error_search = True
+                    traceback.print_exc(file=sys.stdout)
+
+                    buffer += "<b class='red'>Unexpected Error : %s</b><br />\n" % e
+
+                    self.contents = buffer
+                    return
 
         if (output_list is None) or (output_list[1] is None):
             if used_stored == 1:

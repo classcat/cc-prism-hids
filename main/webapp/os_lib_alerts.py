@@ -21,38 +21,62 @@
 # all python scripts were written by masao (@classcat.com)
 #
 # === History ===
+# 31-jul-15 : fixed for beta
+#
 
-import os
+import os, sys
 from datetime import *
 import time
 import os.path
 import re
 import gzip
 import glob
+import traceback
 
 from collections import OrderedDict
 
-from mydebug import MYDEBUG
+#from mydebug import MYDEBUG
 
 from Ossec.Alert import Ossec_Alert
 from Ossec.AlertList import Ossec_AlertList
 
-gcounter_alerts = 0
+# 必要ない？
+# gcounter_alerts = 0
+
+
+"""
+ * Formats the given alerts into HTML and writes the result to the given
+ * file path.
+ """
 
 # TODO: This can probably be a method of AlertList
 def __os_createresults(out_file, alert_list, lang):
+    # 31-jul-15 : fixed for beta
+
     # Opening output file
     myhome  = os.environ['CCPRISM_HOME']
 
     mytmpdir = myhome + "/tmp"
+
     if not os.path.exists(mytmpdir):
-        os.mkdir (mytmpdir)
+        try:
+            os.mkdir (mytmpdir)
+        except Exception as e:
+            raise Exception("mkdir failed : %s (__os_createresults#os_lib_alerts)" % e)
 
     out_file = myhome + out_file
 
-    fobj = open(out_file, "w")
-    fobj.write(alert_list.toHtml())
-    fobj.close()
+    fobj = None
+    try:
+        fobj = open(out_file, "w")
+        fobj.write(alert_list.toHtml())
+
+    except Exception as e:
+        raise Exception("%s (__os_createresults#os_lib_alerts)" % e)
+
+    finally:
+        if fobj:
+            fobj.close()
 
 """
  * Attempts to read the next alert matching any specified constraints from the
@@ -192,8 +216,9 @@ rc_code_hash : %s
         if not buffer.startswith("** Alert"):
             continue
 
-        global gcounter_alerts
-        gcounter_alerts += 1
+        # 必要ない？
+        #global gcounter_alerts
+        #gcounter_alerts += 1
 
         # Getting event time
         evt_time = buffer[9:19]
@@ -427,11 +452,7 @@ def os_searchalerts(conf,
                          location_pattern = None,  str_pattern = None,  group_pattern = None,
                          srcip_pattern = None,   user_pattern = None,  log_pattern = None)  :
 
-    """
-     *  @param integer $min_level
-     *  Used to constrain events by level. Events with levels lower than this value
-     *  will not be returned. Passed directly to __os_parsealert.
-    """
+    # 31-jul-15 : fixed for beta
 
     if False:
         print (">> IN os_searchalerts in os_lib_alerts.py\n")
@@ -510,9 +531,11 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
     curr_time = int(time.time())
 
     # added by masao
-    rc_code_hash = OrderedDict()
+    rc_code_hash = {} # OrderedDict()
 
     # Clearing arguments
+
+    # 必要ないね？
     if rule_id is not None:
         rule_id = "/%s/" % rule_id
 
@@ -559,8 +582,9 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
     # Cleaning old entries
     os_cleanstored(None)
 
-    global gcounter_alerts
-    gcounter_alerts = 0
+    # 必要ない？
+    # global gcounter_alerts
+    # gcounter_alerts = 0
 
     # Getting first file
     init_loop = init_time
@@ -578,21 +602,22 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
 
     # Getting each file
     for file in file_list:
-        #print ("Let's check a file %s" % file)
         # If the file does not exist, it must be gzipped so switch to a
         # compressed stream for reading and try again. If that also fails,
         # abort this log file and continue on to the next one.
         log_file = conf.ossec_dir + "/" + file
-#                log_file = ossec_handle['dir'] + "/" + file
-
 
         fobj = None
         try:
             fobj = open(log_file, "rb")
+
         except Exception as e:
+            #traceback.print_exc(file=sys.stdout)
             try:
                 fobj = gzip.open(log_file + ".gz", "rb")
+
             except Exception as e:
+                traceback.print_exc(file=sys.stdout)
                 continue
 
         # Reading all the entries
@@ -622,9 +647,8 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
                                      log_pattern, log_regex,
                                      rc_code_hash);
 
-            # final time を超えると、None が返される
+            # final time を超えると、None が返される。他のケースもあるっぽいが
             if alert is None:
-                print("Let's break")
                 break
 
             if not 'count' in output_file[0]:
@@ -644,9 +668,6 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
 
     # Creating last entry
     output_file[output_count] = "/tmp/output-tmp.%03d-%s-%s.py" % (output_count, alert_list.size(), search_id)
-    #output_file[output_count] = "/tmp/output-tmp.%s-%s-%s.py" % (output_count, alert_list.size(), search_id)
-
-    # output_file.append("./tmp/output-tmp.%s-%s-%s.php" % (output_count, alert_list.size(), search_id))
 
     output_file[0][output_count] = alert_list.size() - 1
     output_file.append(None)
@@ -655,7 +676,6 @@ string(60) "./tmp/output-tmp.4-1000-f95606de5c49b31df3348c8001ae0ab4.php"
 
     output_file[0]['pg'] = output_count
 
-    #print(output_file)
 
     return output_file
 
@@ -681,7 +701,12 @@ def  os_cleanstored(search_id = None):
                 os.unlink(file)
 
 
-def os_getstoredalerts(ossec_handle, search_id):
+def os_getstoredalerts(search_id):
+#def os_getstoredalerts(conf, search_id):
+    # 31-jul-15 : fixed for beta
+
+    # TODO: $ossec_handle is not used here, remove it.
+    # Done : 31-jul-15
 
     output_file = []
     output_file.append(OrderedDict())
@@ -722,8 +747,6 @@ def os_getstoredalerts(ossec_handle, search_id):
             output_count += 1
 
     output_file[0]['pg'] = output_count - 1
-
-    #print(output_file)
 
     return output_file
 
