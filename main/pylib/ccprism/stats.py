@@ -286,18 +286,28 @@ class Stats(View):
             else:
                 buffer += "<b>Average</b>: " + "%.02f" % h_avg + " events per hour."
 
+        msg_severity = "Aggregate values by severity"
+        msg_option = "Option"
+        msg_value = "Value"
+        msg_percentage = "Percentage"
+        if is_lang_ja:
+            msg_severity = "重要度による集計値"
+            msg_option = "オプション"
+            msg_value = "値"
+            msg_percentage = "パーセント"
+
         buffer += """<br /><br />
 <br /><div class="statssmall">
-<table align="center"><tr valign="top"><td width="50%">
+<table align="center"><tr valign="top"><td width="50%%">
 
 <table summary="Total values">
-    <caption><strong>Aggregate values by severity</strong></caption>
+    <caption><strong>%s</strong></caption>
     <tr>
-    <th>Option</th>
-    <th>Value</th>
-    <th>Percentage</th>
+    <th>%s</th>
+    <th>%s</th>
+    <th>%s</th>
     </tr>
-        """
+        """ % (msg_severity, msg_option, msg_value, msg_percentage)
 
         """
         OrderedDict([('total', 24150), ('alerts', 18798), ('syscheck', 3), ('firewall', 0),
@@ -323,7 +333,10 @@ class Stats(View):
             for k, v in sorted(daily_stats['level'].items()):
                 level_dict[k] = v
 
-            for  l_level, v_level in sorted(level_dict.items(), key=lambda x: x[1]):
+            # 多い順に表示するべき
+            for  l_level, v_level in sorted(level_dict.items(), key=lambda x: x[1], reverse=True):
+            #   for  l_level, v_level in sorted(level_dict.items(), key=lambda x: x[1], reverse=True):
+
             # 10, 2, 5, 1, 7, 0, 3
             #for  l_level, v_level in sorted(daily_stats['level'].items(), key=lambda x: x[1]):
             # 5, 10, 2, 1, 7, 0, 3
@@ -336,31 +349,46 @@ class Stats(View):
 
                 odd_count += 1
 
-                buffer += """
-                <tr %s>
-                    <td>Total for level%s</td>
-                    <td>%s</td>
-                    <td>%s %%</td>
-                """ % (odd_msg, l_level, format_decimal(v_level, locale='en_US'), "%.01f" % level_pct)
+                l_level2 = l_level
+                if len(str(l_level)) == 1:
+                    l_level2 = "&nbsp;%s" % l_level
 
-        #print ("result is :")
-        #print(sorted_daily_stats_level)
+                if is_lang_ja:
+                    buffer += """
+                    <tr %s>
+                        <td>レベル <b>%s</b> 総計</td>
+                        <td align="right">%s</td>
+                        <td align="right">%s %%</td>
+                    """ % (odd_msg, l_level2, format_decimal(v_level, locale='en_US'), "%.01f" % level_pct)
+                else:
+                    buffer += """
+                    <tr %s>
+                        <td>Total for level%s</td>
+                        <td align="right">%s&nbsp;</td>
+                        <td align="right">%s %%</td>
+                    """ % (odd_msg, l_level, format_decimal(v_level, locale='en_US'), "%.01f" % level_pct)
 
         if (odd_count % 2) == 0:
             odd_msg =  ' class="odd"'
         else:
             odd_msg = ""
 
+        msg_total_level = "Total for all levels"
+        if is_lang_ja:
+            msg_total_level = "全レベル総計"
+
         buffer += """
         <tr %s>
-<td>Total for all levels</td>
 <td>%s</td>
-<td>100%%</td>
+<td align="right">%s</td>
+<td align="right">100%%</td>
 </tr>
 </table>
 
-</td>
+</td>"""  % (odd_msg, msg_total_level, format_decimal(daily_stats['alerts'], locale='en_US'))
 
+
+        buffer += """\
 <td width="50%%">
 <table summary="Total values">
     <caption><strong>Aggregate values by rule</strong></caption>
@@ -369,8 +397,7 @@ class Stats(View):
     <th>Value</th>
     <th>Percentage</th>
     </tr>
-        """ % (odd_msg, format_decimal(daily_stats['alerts'], locale='en_US'))
-
+        """
 
         if 'rule' in daily_stats.keys():
 
@@ -505,17 +532,13 @@ class Stats(View):
 
             for i in range(0, 24):
                 if 'total_by_hour' in daily_stats.keys():
-                    print ("OK")
-                    print(daily_stats['total_by_hour'].keys())
+                    #print(daily_stats['total_by_hour'].keys())
                     if str(i) in daily_stats['total_by_hour'].keys():
                         pass
                     else:
-                        print ("not found")
                         continue
                 else:
                     continue
-
-                print(" got it ?")
 
                 hour_total = int(daily_stats['total_by_hour'][str(i)])
                 hour_alerts = int(daily_stats['alerts_by_hour'][str(i)])
@@ -566,42 +589,7 @@ class Stats(View):
 
 
 
-    def x_make_html(self):
-        self.html = """\
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-%s
-</head>
+    #def getHtml(self):
+    #    return self.html
 
-<body>
-    <br/>
-%s
-
-<div id="container">
-  <div id="content_box">
-  <div id="content" class="pages">
-  <a name="top"></a>
-
-  <!-- BEGIN: content -->
-
-  %s
-
-  <!-- END: content -->
-
-  <br /><br />
-  <br /><br />
-  </div>
-  </div>
-
-%s
-
-</div>
-</body>
-</html>
-""" % (View.HEAD, View.HEADER, self.contents, View.FOOTER)
-        pass
-
-
-    def getHtml(self):
-        return self.html
+### End of Script ###
