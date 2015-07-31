@@ -21,7 +21,7 @@
 # all python scripts were written by masao (@classcat.com)
 #
 # === History ===
-
+# 31-jul-15 : fixed for beta
 #
 
 import os, sys
@@ -33,7 +33,7 @@ from collections import OrderedDict
 
 def __os_getdb(file, _name, conf):
     # 31-jul-15 : fixed for beta
-    
+
     db_list = OrderedDict()
     mod_list = OrderedDict()
     db_count = 0
