@@ -7,7 +7,7 @@
 # all python scripts were written by masao (@classcat.com)
 #
 # === History ===
-
+# 31-jul-15 : fixed for beta
 #
 
 import os,sys
@@ -135,7 +135,25 @@ class SysCheck(View):
                 self.contents = buffer + dump_buffer
                 return
 
-        buffer += "<br /><h2>Latest modified files (for all agents): </h2>\n\n"
+        # last modified files
+        if is_lang_ja:
+            buffer += "<br /><h2>最新の変更ファイル (for 全てのエージェント): </h2>\n\n"
+        else:
+            buffer += "<br /><h2>Latest modified files (for all agents): </h2>\n\n"
+
+        if (syscheck_list is not None) and ('global_list' in syscheck_list.keys()) and (syscheck_list['global_list'] is not None) and ('files' in syscheck_list['global_list'].keys()) and syscheck_list['global_list']['files']:
+            pass
+        else:
+            buffer += """
+            <ul class="ulsmall bluez">
+            No integrity checking information available.<br />
+            Nothing reported as changed.
+            </ul>
+            """
+            self.contents = buffer
+            return
+
+        buffer += '<table><tr><td valign="top">'
 
         last_mod_date = ""
         sk_count = 0
@@ -144,20 +162,19 @@ class SysCheck(View):
         for syscheck in syscheck_list['global_list']['files']:
             sk_count += 1
 
+            # Initing file name
             ffile_name = ""
             ffile_name2 = ""
 
             ffile_name = syscheck['sk_file_name']
 
-            # Setting the database
+            # Setting the date
             ts = int(syscheck['time_stamp'])
             dt   = datetime.datetime.fromtimestamp(ts).strftime("%m/%d/%Y")
             dt2 = datetime.datetime.fromtimestamp(ts).strftime("%m/%d/%Y %H:%M:%S")
             if last_mod_date != dt:
                 last_mod_date = dt
                 buffer += "<br/><b>%s</b><br/>" % last_mod_date
-
-            # ts = datetime.datetime.fromtimestamp(int(syscheck['time_stamp'])).strftime("%m/%d/%Y %H:%M:%S")
 
             buffer += """\
                <span id="togglesk%s">
@@ -170,70 +187,25 @@ class SysCheck(View):
             buffer += """\
                 <div id="contentsk%d" style="display: none">
 
-               <a  href="#" title="Hide %s"
-               onclick="HideSection(\'sk%d\');return false;">-%s</a>
-               <br />
-               <div class="smaller">
-               &nbsp;&nbsp;<b>File:</b> %s<br />
-               &nbsp;&nbsp;<b>Agent:</b> %s<br />
-               &nbsp;&nbsp;<b>Modification time:</b>
-               %s<br />
-               </div>
+                <a  href="#" title="Hide %s"
+                onclick="HideSection(\'sk%d\');return false;">-%s</a>
+                <br />
+                <div class="smaller">
+                &nbsp;&nbsp;<b>File:</b> %s<br />
+                &nbsp;&nbsp;<b>Agent:</b> %s<br />
+                &nbsp;&nbsp;<b>Modification time:</b>
+                %s<br />
+                </div>
 
-               </div>
+                </div>
             """ % (sk_count, ffile_name, sk_count, ffile_name, ffile_name, syscheck['_name'], dt2)
-
-            pass
 
         buffer += "</td></tr></table>"
         buffer += "<br /> <br />\n"
 
-        #syscheck_count = 0
-        #syscheck_list2 = []
-        ## {'time_stamp':time_stamp, '_name':_name, 'sk_file_name':sk_file_name}
-        #for syscheck in syscheck_list['global_list']['files']:
-        #    ts = datetime.datetime.fromtimestamp(int(syscheck['time_stamp'])).strftime("%m/%d/%Y %H:%M:%S")
-        #    syscheck_list2.append({'id':syscheck_count, 'ts':ts, 'name':syscheck['_name'], 'filename':syscheck['sk_file_name']})
-        #    syscheck_count += 1
-        #pass
-
         self.contents = buffer
 
-    def x_make_html(self):
-        self.html = """\
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-%s
-</head>
+#    def getHtml(self):
+#        return self.html
 
-<body>
-    <br/>
-%s
-
-<div id="container">
-  <div id="content_box">
-  <div id="content" class="pages">
-  <a name="top"></a>
-
-  <!-- BEGIN: content -->
-
-  %s
-
-  <!-- END: content -->
-
-  <br /><br />
-  <br /><br />
-  </div>
-  </div>
-
-%s
-
-</div>
-</body>
-</html>
-""" % (View.HEAD, View.HEADER, self.contents, View.FOOTER)
-        pass
-
-    def getHtml(self):
-        return self.html
+### End of Script ###
