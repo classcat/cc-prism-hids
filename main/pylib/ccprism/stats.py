@@ -1,35 +1,19 @@
-"""
-/**
- * Ossec Framework
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * @category   Ossec
- * @package    Ossec
- * @version    $Id: Histogram.php,v 1.3 2008/03/03 15:12:18 dcid Exp $
- * @author     Chris Abernethy
- * @copyright  Copyright (c) 2007-2008, Daniel B. Cid <dcid@ossec.net>, All rights reserved.
- * @license    http://www.gnu.org/licenses/gpl-3.0.txt GNU Public License
- */
-"""
+##############################################################
+# ClassCat(R) Prism for HIDS
+#  Copyright (C) 2015 ClassCat Co.,Ltd. All rights reseerved.
+##############################################################
 
-##############################################################
-#  Copyright C) 2015 Masashi Okumura All rights reseerved.
-##############################################################
+# ===  Notice ===
+# all python scripts were written by masao (@classcat.com)
+#
+# === History ===
+
+#
+
 
 import os,sys
 import re
+import traceback
 
 from flask import Flask, session, request, redirect, render_template, url_for
 from flask import jsonify, make_response
@@ -43,12 +27,10 @@ from collections import OrderedDict
 
 from babel.numbers import format_decimal
 
-#import ossec_conf
 import os_lib_handle
-import os_lib_agent
-import os_lib_alerts
+#import os_lib_agent
+#import os_lib_alerts
 import os_lib_stats
-#import os_lib_syscheck
 
 from ossec_categories import global_categories
 from ossec_formats import log_categories
@@ -65,14 +47,15 @@ class Stats(View):
 
 
     def _make_contents(self):
-        req       = self.request
+        req = self.request
         conf = self.conf
 
+        form = req.form
+
         is_post = self.is_post
-        form     = req.form
+        is_lang_ja = self.is_lang_ja
 
         # Starting handle
-        #ossec_handle = os_lib_handle.os_handle_start(conf.ossec_dir)
         if not conf.check_dir():
             if is_lang_ja:
                 buffer += "ossec ディレクトリにアクセスできません。\n"
@@ -80,36 +63,32 @@ class Stats(View):
                 buffer += "Unable to access ossec directory.\n"
             self.contents = buffer
             return
-        #ossec_handle = os_lib_handle.os_handle_start(ossec_conf.ossec_dir)
 
         # Current date values (day : 05, month : 07, year : 2015)
         curr_time = int(time.time())
-        curr_day =  datetime.fromtimestamp(curr_time).strftime("%d")
+        curr_day =  int(datetime.fromtimestamp(curr_time).strftime("%d")) # 0 padding を回避
         curr_month = datetime.fromtimestamp(curr_time).strftime("%m")
         curr_year = datetime.fromtimestamp(curr_time).strftime("%Y")
-
-        #  datetime.fromtimestamp(curr_time).strftime("%Y-%m-%d %H:%M")
 
         # Getting user values
         USER_day = None
         USER_month = None
         USER_year = None
 
-        if is_post and ('day' in form):
+        if is_post and ('day' in form.keys()):
             strday = form.get('day')
             if strday.isdigit():
                 if (int(strday) >= 0) and (int(strday) <=31 ):
                     USER_day = strday
                     # USER_day = "%02d" % int(strday)  # TODO : キーをどうするか
-                    print (USER_day)
 
-        if is_post and ('month' in form):
+        if is_post and ('month' in form.keys()):
             strmonth = form.get('month')
             if strmonth.isdigit():
                 if (int(strmonth) > 0) and (int(strmonth) <=12):
                     USER_month = strmonth
 
-        if is_post and ('year' in form):
+        if is_post and ('year' in form.keys()):
             stryear = form.get('year')
             if stryear.isdigit():
                 if (int(stryear) >= 1) and (int(stryear) <= 3000):
@@ -120,10 +99,8 @@ class Stats(View):
 
         # Bulding stat time_stamp
         if (USER_year is not None) and (USER_month is not None) and (USER_day is not None):
-            print ("UESR_day is %s" % USER_day)
             # Stat for whole month
             if int(USER_day) == 0:
-                print ("OKOK")
                 init_time = int(time.mktime((int(USER_year), int(USER_month), 1, 0, 0, 0, 0, 0, -1)))
                 final_time = int(time.mktime((int(USER_year), int(USER_month) + 1, 0, 0, 0, 0, 0, 0, -1)))
                 # 2015-12-01 00:00:00
@@ -135,6 +112,11 @@ class Stats(View):
                 init_time = int(time.mktime((int(USER_year), int(USER_month), int(USER_day), 0, 0, 0, 0, 0, -1)))
                 final_time = int(time.mktime((int(USER_year), int(USER_month), int(USER_day), 0, 0, 10, 0, 0, -1)))
 
+                # Getting valid formated day
+                #$USER_day = date('d',$init_time);
+
+                # 0 padding は回避
+
         else:
             init_time = curr_time - 1
             final_time = curr_time
@@ -144,17 +126,27 @@ class Stats(View):
             USER_day = curr_day
             USER_year = curr_year
 
+        # print("USER_day %s USER_month %s USER_year %s" % (USER_day, USER_month, USER_year))
+        # get : USER_day 01 USER_month 08 USER_year 2015
+        # post : USER_day 1 USER_month 8 USER_year 2015
+
         buffer = ""
 
         # Day option
-        buffer += "<h2>Stats options</h2><br />\n"
+        if is_lang_ja:
+            buffer += "<h2>統計情報オプション</h2><br />\n"
+        else:
+            buffer += "<h2>Stats options</h2><br />\n"
 
+        msg_day = "Day:"
+        if is_lang_ja:
+            msg_day = "日:"
         buffer += """\
         <form name="dosearch" method="post" action="stats">
 
-Day:  <select name="day" class="formSelect">
+%s  <select name="day" class="formSelect">
     <option value="0">All days</option>
-        """
+        """ % (msg_day)
 
         for l_counter in range(1, 32):
             tmp_msg = ""
@@ -180,7 +172,11 @@ Day:  <select name="day" class="formSelect">
             ("December", "Dec")
         ])
 
-        buffer += ' Month: <select name="month" class="formSelect">'
+        msg_month = "Month:"
+        if is_lang_ja:
+            msg_month = "月:"
+
+        buffer += """ %s <select name="month" class="formSelect">""" % (msg_month)
 
         mnt_ct = 1
         for tmp_month, tmp_month_v in months.items():
@@ -193,51 +189,62 @@ Day:  <select name="day" class="formSelect">
 
         buffer += "</select>"
 
-        # year
-        buffer += """ Year: <select name="year" class="formSelect">
+        # Year
+        msg_year = "Year:"
+        msg_change_options = "Change options"
+        if is_lang_ja:
+            msg_year = "年:"
+            msg_change_options = "オプション変更"
+
+        buffer += """ %s <select name="year" class="formSelect">
         <option value="%s" selected="selected">%s</option>
         <option value="%s">%s</option>
         <option value="%s">%s</option>
-        </select> <input type="submit" name="Stats" value="Change options" class="button" /></form>""" % (curr_year, curr_year, int(curr_year) - 1, int(curr_year) -1, int(curr_year) -2, int(curr_year) -2)
+        </select> <button type="submit" name="Stats" value="Change options" class="button" />%s</button></form>""" % (msg_year, curr_year, curr_year, int(curr_year) - 1, int(curr_year) -1, int(curr_year) -2, int(curr_year) -2, msg_change_options)
 
+        #
         # Getting daily stats
-        # 2015/Jul
-        l_year_month = datetime.fromtimestamp(init_time).strftime("%Y/%b")
+        #
 
-        print ("INIT_TIME")
-        print (init_time)
-        print(final_time)
-        print (datetime.fromtimestamp(init_time).strftime("%Y/%m/%d %H:%M:%S"))
-        print (datetime.fromtimestamp(final_time).strftime("%Y/%m/%d %H:%M:%S"))
-        """
-        1435676400
-1438268400
-2015/07/01 00:00:00
-2015/07/31 00:00:00
+        l_year_month = datetime.fromtimestamp(init_time).strftime("%Y/%b")  #  2015/Jul
 
-        """
+        # print ("INIT_TIME")
+        # print (init_time)
+        # print(final_time)
+        # print (datetime.fromtimestamp(init_time).strftime("%Y/%m/%d %H:%M:%S"))
+        # print (datetime.fromtimestamp(final_time).strftime("%Y/%m/%d %H:%M:%S"))
 
+        # 7/1 指定の場合
+        # 1435676400
+        # 1435676410
+        # 2015/07/01 00:00:00
+        # 2015/07/01 00:00:10
+
+        # 7/17 指定の場合
+        # 2015/07/17 00:00:00
+        # 2015/07/17 00:00:10
+
+        # 7/All
+        # 1435676400
+        # 1438268400
+        # 2015/07/01 00:00:00
+        # 2015/07/31 00:00:00
 
         stats_list = os_lib_stats.os_getstats(conf, init_time, final_time)
-        #stats_list = os_lib_stats.os_getstats(ossec_handle, init_time, final_time)
 
-
-        print ("stats_list")
-        print (stats_list)
-        print ("USER_day %s"  % USER_day)
+        # print ("stats_list")
+        #print (stats_list)
+        # print ("USER_day %s"  % USER_day) # 0 padding  されていない
 
         daily_stats = OrderedDict()
         all_stats = None
 
         if l_year_month in stats_list.keys():
-            for k in stats_list[l_year_month].keys():
-                print ("key is : %s" %k)
+            #for k in stats_list[l_year_month].keys():
+            #    print ("key is : %s" %k)
             if str(USER_day) in stats_list[l_year_month].keys():
-                print ("found ")
                 daily_stats = stats_list[l_year_month][str(USER_day)]
                 all_stats = stats_list[l_year_month]
-
-        print (daily_stats)
 
         if not 'total' in daily_stats.keys():
             buffer += """<br/>
@@ -250,22 +257,34 @@ Day:  <select name="day" class="formSelect">
             buffer += "<br />"
 
         # Day 0 == month stats
-        if USER_day == 0:
-            buffer += "<h2>Ossec Stats for: <b id='blue'>%s</b></h2><br />\n" % l_year_month
+        if int(USER_day) == 0:
+            if is_lang_ja:
+                buffer += "<h2>統計情報 for: <b id='blue'>%s</b></h2><br />\n" % l_year_month
+            else:
+                buffer += "<h2>Ossec Stats for: <b id='blue'>%s</b></h2><br />\n" % l_year_month
         else:
-            buffer += "<h2>Ossec Stats for: <b id='blue'>%s/%s</b> </h2><br /><br />\n\n" % (l_year_month, USER_day)
+            if is_lang_ja:
+                buffer += "<h2>統計情報 for: <b id='blue'>%s/%02d</b> </h2><br /><br />\n\n" % (l_year_month, int(USER_day))
+            else:
+                buffer += "<h2>Ossec Stats for: <b id='blue'>%s/%02d</b> </h2><br /><br />\n\n" % (l_year_month, int(USER_day))
 
+        if is_lang_ja:
+            buffer += "<b>総計</b>: " + format_decimal(daily_stats['total'], locale='en_US')+ "<br/>"
+            buffer += "<b>Alerts</b>: " + format_decimal(daily_stats['alerts'], locale='en_US') + "<br/>"
+            buffer += "<b>整合性チェック</b>: " + format_decimal(daily_stats['syscheck'], locale='en_US') + "<br/>"
+            buffer += "<b>ファイアウォール</b>: " + format_decimal(daily_stats['firewall'], locale='en_US') + "<br/>"
+        else:
+            buffer += "<b>Total</b>: " + format_decimal(daily_stats['total'], locale='en_US')+ "<br/>"
+            buffer += "<b>Alerts</b>: " + format_decimal(daily_stats['alerts'], locale='en_US') + "<br/>"
+            buffer += "<b>Syscheck</b>: " + format_decimal(daily_stats['syscheck'], locale='en_US') + "<br/>"
+            buffer += "<b>Firewall</b>: " + format_decimal(daily_stats['firewall'], locale='en_US') + "<br/>"
 
-
-        buffer += "<b>Total</b>: " + format_decimal(daily_stats['total'], locale='en_US')+ "<br/>"
-        buffer += "<b>Alerts</b>: " + format_decimal(daily_stats['alerts'], locale='en_US') + "<br/>"
-        buffer += "<b>Syscheck</b>: " + format_decimal(daily_stats['syscheck'], locale='en_US') + "<br/>"
-        buffer += "<b>Firewall</b>: " + format_decimal(daily_stats['firewall'], locale='en_US') + "<br/>"
-
-        if USER_day != 0:
+        if int(USER_day) != 0:
             h_avg = int(daily_stats['total']) / 24.0
-            print (h_avg)
-            buffer += "<b>Average</b>: " + "%.02f" % h_avg + " events per hour."
+            if is_lang_ja:
+                buffer += "<b>平均</b>: " + "%.02f" % h_avg + " イベント / 時間"
+            else:
+                buffer += "<b>Average</b>: " + "%.02f" % h_avg + " events per hour."
 
         buffer += """<br /><br />
 <br /><div class="statssmall">

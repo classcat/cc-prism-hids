@@ -1,4 +1,28 @@
-#!/usr/bin/env python
+#/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+/* Copyright (C) 2006-2008 Daniel B. Cid <dcid@ossec.net>
+ * All rights reserved.
+ *
+ * This program is a free software; you can redistribute it
+ * and/or modify it under the terms of the GNU General Public
+ * License (version 3) as published by the FSF - Free Software
+ * Foundation
+ */
+"""
+
+##############################################################
+# ClassCat(R) Prism for HIDS
+#  Copyright (C) 2015 ClassCat Co.,Ltd. All rights reseerved.
+##############################################################
+
+# === Notice ===
+# all python scripts were written by masao (@classcat.com)
+#
+# === History ===
+
+#
 
 import os
 from datetime import *
@@ -103,13 +127,14 @@ def __os_parsestats(fobj, month_hash):
     month_hash['firewall'] += daily_hash['firewall']
     month_hash['syscheck'] += daily_hash['syscheck']
 
-    print ("-vvvvvvvvvvvvvvvvv")
-    print(month_hash['total'])
+    #print ("-vvvvvvvvvvvvvvvvv")
+    #print(month_hash['total'])
 
     return (daily_hash)
 
 
-def os_getstats(ossec_handle, init_time, final_time):
+def os_getstats(conf, init_time, final_time):
+    # 01-aug-15 : fixed for beta
     stats_list = OrderedDict()
     stats_count = 1
 
@@ -132,19 +157,15 @@ def os_getstats(ossec_handle, init_time, final_time):
     while init_loop <= final_time:
 
         l_year_month = datetime.fromtimestamp(init_loop).strftime("%Y/%b")
-        l_day = datetime.fromtimestamp(init_loop).strftime("%d")
-        # print(">>>>>" + l_day)
+        l_day = datetime.fromtimestamp(init_loop).strftime("%d")  # 0 padding
 
         # ここでは、0 でのパディングが必要
+        # ex) stats/totals/2015/Jul/ossec-totals-04.log
         file = "stats/totals/%s/ossec-totals-%s.log" % (l_year_month, l_day)
-
-        print(file)
 
         l_day = str(int(l_day))  # これ、重要、padding をはずして、文字列に
 
-        log_file = ossec_handle.ossec_dir + "/" + file
-        #         log_file = ossec_handle['dir'] + "/" + file
-
+        log_file = conf.ossec_dir + "/" + file
 
         # Adding one day
         init_loop += 86400
@@ -173,8 +194,7 @@ def os_getstats(ossec_handle, init_time, final_time):
         stats_list[l_year_month] = OrderedDict()
     stats_list[l_year_month]["0"] = month_hash
 
-    print(stats_list)
-
     return (stats_list)
 
-    pass
+
+### End of Script ###
