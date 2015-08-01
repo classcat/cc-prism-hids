@@ -4,6 +4,13 @@
 #  Copyright (C) 2015 ClassCat Co.,Ltd. All rights reseerved.
 ##############################################################
 
+# ===  Notice ===
+# all python scripts were written by masao (@classcat.com)
+#
+# === History ===
+# 01-aug-15 : fixed for beta
+#
+
 class View(object):
 
     HEAD = """\
@@ -183,3 +190,6 @@ class View(object):
 
     def getHtml(self):
         return self.html
+
+
+### End of Scrpit ###
