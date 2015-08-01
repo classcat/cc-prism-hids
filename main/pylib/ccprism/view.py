@@ -8,6 +8,7 @@
 # all python scripts were written by masao (@classcat.com)
 #
 # === History ===
+# 02-aug-15 : logout added.
 # 01-aug-15 : fixed for beta
 #
 
@@ -64,6 +65,7 @@ class View(object):
   <li><a href="syscheck" title="Integrity checking">Integrity checking</a></li>
   <li><a href="stats" title="Stats">Stats</a></li>
   <li><a href="help" title="Help">About</a></li>
+  <li><a href="logout" title="Logout"><span style="color:#999">Logout</span></a></li>
   </ul>
 </div>
 
@@ -89,6 +91,7 @@ class View(object):
   <li><a href="syscheck" title="Integrity checking">整合性チェック</a></li>
   <li><a href="stats" title="Stats">統計情報</a></li>
   <li><a href="help" title="Help">About</a></li>
+  <li><a href="logout" title="Logout"><span style="color:#999">ログアウト</span></a></li>
   </ul>
 </div>
 
