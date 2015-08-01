@@ -7,7 +7,7 @@
 # all python scripts were written by masao (@classcat.com)
 #
 # === History ===
-
+# 01-aug-15 : fixed for beta
 #
 
 
@@ -335,7 +335,7 @@ class Stats(View):
 
             # 多い順に表示するべき
             for  l_level, v_level in sorted(level_dict.items(), key=lambda x: x[1], reverse=True):
-            #   for  l_level, v_level in sorted(level_dict.items(), key=lambda x: x[1], reverse=True):
+            #   for  l_level, v_level in sorted(level_dict.items(), key=lambda x: x[1]):
 
             # 10, 2, 5, 1, 7, 0, 3
             #for  l_level, v_level in sorted(daily_stats['level'].items(), key=lambda x: x[1]):
@@ -388,16 +388,24 @@ class Stats(View):
 </td>"""  % (odd_msg, msg_total_level, format_decimal(daily_stats['alerts'], locale='en_US'))
 
 
+        #
+        # RULE
+        #
+
+        msg_rule = "Aggregate values by rule"
+        if is_lang_ja:
+            msg_rule = "ルールによる集計値"
+
         buffer += """\
 <td width="50%%">
 <table summary="Total values">
-    <caption><strong>Aggregate values by rule</strong></caption>
+    <caption><strong>%s</strong></caption>
     <tr>
-    <th>Option</th>
-    <th>Value</th>
-    <th>Percentage</th>
+    <th>%s</th>
+    <th>%s</th>
+    <th>%s</th>
     </tr>
-        """
+        """ % (msg_rule, msg_option, msg_value, msg_percentage)
 
         if 'rule' in daily_stats.keys():
 
@@ -405,7 +413,8 @@ class Stats(View):
             for k, v in sorted(daily_stats['rule'].items()):
                 rule_dict[k] = v
 
-            for  l_rule, v_rule in sorted(rule_dict.items(), key=lambda x: x[1]):
+            for  l_rule, v_rule in sorted(rule_dict.items(), key=lambda x: x[1], reverse=True):
+            #  for  l_rule, v_rule in sorted(rule_dict.items(), key=lambda x: x[1]):
                 rule_pct = (v_rule*100)/daily_stats['alerts']
                 if (odd_count %2) == 0:
                     odd_msg = ' class="odd"'
@@ -414,13 +423,22 @@ class Stats(View):
 
                 odd_count += 1
 
-                buffer += """
+                if is_lang_ja:
+                    buffer += """
+                	    <tr %s>
+	    <td>ルール <b>%s</b> 総計</td>
+	    <td align="right">%s</td>
+	    <td align="right">%s %%</td>
+	    </tr>
+                    """ % (odd_msg, l_rule,  format_decimal(v_rule, locale='en_US'), "%.01f" % rule_pct)
+                else:
+                    buffer += """
                 	    <tr %s>
 	    <td>Total for Rule %s</td>
-	    <td>%s</td>
-	    <td>%s %%</td>
+	    <td align="right">%s</td>
+	    <td align="right">%s %%</td>
 	    </tr>
-                """ % (odd_msg, l_rule,  format_decimal(v_rule, locale='en_US'), "%.01f" % rule_pct)
+                    """ % (odd_msg, l_rule,  format_decimal(v_rule, locale='en_US'), "%.01f" % rule_pct)
 
         if (odd_count % 2) == 0:
             odd_msg =  ' class="odd"'
@@ -442,7 +460,27 @@ class Stats(View):
 
         # Monthly stats
         if int(USER_day) == 0:
-            buffer += """
+            if is_lang_ja:
+                buffer += """
+                    <br /><br />
+        <table align="center" summary="Total by day">
+        <caption><strong>総計 / 日</strong></caption>
+        <tr>
+        <th>&nbsp;&nbsp;日&nbsp;&nbsp;</th>
+        <th>&nbsp;&nbsp;&nbsp;&nbsp;Alerts&nbsp;&nbsp;&nbsp;&nbsp;</th>
+        <th>&nbsp;&nbsp;&nbsp;&nbsp;Alerts %&nbsp;&nbsp;&nbsp;&nbsp;</th>
+        <th>整合性チェック</th>
+        <th>整合性チェック %</th>
+        <th>ファイアウォール</th>
+        <th>ファイアウォール %</th>
+        <th>&nbsp;&nbsp;&nbsp;&nbsp;総計&nbsp;&nbsp;&nbsp;&nbsp;</th>
+        <th>&nbsp;&nbsp;&nbsp;&nbsp;総計 %&nbsp;&nbsp;&nbsp;&nbsp;</th>
+        </tr>
+
+                """
+
+            else:
+                buffer += """
                     <br /><br />
         <table align="center" summary="Total by day">
         <caption><strong>Total values per Day</strong></caption>
@@ -458,7 +496,7 @@ class Stats(View):
         <th>Total %</th>
         </tr>
 
-            """
+                """
 
             odd_count = 0
             odd_msg = ""
@@ -487,20 +525,27 @@ class Stats(View):
 
                 odd_count += 1
 
+                msg_day = "Day %s" % i
+                if is_lang_ja:
+                    if len(str(i)) == 1:
+                        msg_day = "&nbsp;<b>%s</b> 日" % i
+                    else:
+                        msg_day = "<b>%s</b> 日" % i
+
                 buffer += """
             <tr %s>
-            <td>Day %s</td>
-            <td>%s</td>
-            <td>%s %%</td>
-            <td>%s</td>
-            <td>%s %%</td>
-            <td>%s</td>
-            <td>%s %%</td>
-            <td>%s</td>
-            <td>%s %%</td>
+            <td align="right">%s</td>
+            <td align="right">%s</td>
+            <td align="right">%s %%</td>
+            <td align="right">%s</td>
+            <td align="right">%s %%</td>
+            <td align="right">%s</td>
+            <td align="right">%s %%</td>
+            <td align="right">%s</td>
+            <td align="right">%s %%</td>
 
             </tr>
-                """ % (odd_msg, i,
+                """ % (odd_msg, msg_day,
                                 format_decimal(d_alerts, locale='en_US'), alerts_pct,
                                 format_decimal(d_syscheck, locale='en_US'), syscheck_pct,
                                 format_decimal(d_firewall, locale='en_US'), firewall_pct,
@@ -510,7 +555,26 @@ class Stats(View):
 
         # Daily stats
         else:
-            buffer += """
+            if is_lang_ja:
+                buffer += """
+                    <br /><br />
+        <table align="center" summary="Total by hour">
+        <caption><strong>総計 / 時間</strong></caption>
+        <tr>
+        <th>&nbsp;&nbsp;時刻&nbsp;&nbsp;</th>
+        <th>&nbsp;&nbsp;&nbsp;&nbsp;Alerts&nbsp;&nbsp;&nbsp;&nbsp;</th>
+        <th>&nbsp;&nbsp;&nbsp;&nbsp;Alerts %&nbsp;&nbsp;&nbsp;&nbsp;</th>
+        <th>整合性チェック</th>
+        <th>整合性チェック %</th>
+        <th>ファイアウォール</th>
+        <th>ファイアウォール %</th>
+        <th>&nbsp;&nbsp;&nbsp;&nbsp;総計&nbsp;&nbsp;&nbsp;&nbsp;</th>
+        <th>&nbsp;&nbsp;&nbsp;&nbsp;総計 %&nbsp;&nbsp;&nbsp;&nbsp;</th>
+        </tr>
+                """
+
+            else:
+                buffer += """
                     <br /><br />
         <table align="center" summary="Total by hour">
         <caption><strong>Total values per hour</strong></caption>
@@ -525,14 +589,13 @@ class Stats(View):
         <th>Total</th>
         <th>Total %</th>
         </tr>
-            """
+                """
 
             odd_count = 0
             odd_msg = ""
 
             for i in range(0, 24):
                 if 'total_by_hour' in daily_stats.keys():
-                    #print(daily_stats['total_by_hour'].keys())
                     if str(i) in daily_stats['total_by_hour'].keys():
                         pass
                     else:
@@ -550,7 +613,6 @@ class Stats(View):
                 syscheck_pct = (hour_syscheck*100)/max(daily_stats['syscheck'], 1)
                 firewall_pct = (hour_firewall*100)/max(daily_stats['firewall'], 1)
 
-
                 if (odd_count % 2) == 0:
                     odd_msg = ' class="odd"'
                 else:
@@ -558,38 +620,38 @@ class Stats(View):
 
                 odd_count += 1
 
+                msg_hour = "Hour %s" % i
+                if is_lang_ja:
+                    if len(str(i)) == 1:
+                        msg_hour = "&nbsp;<b>%s</b> 時" % i
+                    else:
+                        msg_hour = "<b>%s</b> 時" % i
+
                 buffer += """
             <tr.$odd_msg>
-            <td>Hour %s</td>
             <td>%s</td>
-            <td>%s %%</td>
+            <td align="right">%s</td>
+            <td align="right">%s %%</td>
 
-            <td>%s</td>
-            <td>%s %%</td>
+            <td align="right">%s</td>
+            <td align="right">%s %%</td>
 
-            <td>%s</td>
-            <td>%s %%</td>
+            <td align="right">%s</td>
+            <td align="right">%s %%</td>
 
-            <td>%s</td>
-            <td>%s %%</td>
+            <td align="right">%s</td>
+            <td align="right">%s %%</td>
             </tr>
-                """ % (i,
+                """ % (msg_hour,
                             format_decimal(hour_alerts, locale='en_US'), "%.01f" % alerts_pct,
                             format_decimal(hour_syscheck, locale='en_US'), "%.01f" % syscheck_pct,
                             format_decimal(hour_firewall, locale='en_US'), "%.01f" % firewall_pct,
                             format_decimal(hour_total, locale='en_US'), "%.01f" % total_pct
                         )
 
-
-
-
         buffer += "</table></div>"
 
         self.contents = buffer
 
-
-
-    #def getHtml(self):
-    #    return self.html
 
 ### End of Script ###

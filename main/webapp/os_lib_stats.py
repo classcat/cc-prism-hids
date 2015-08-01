@@ -21,7 +21,7 @@
 # all python scripts were written by masao (@classcat.com)
 #
 # === History ===
-
+# 31-jul-15 : fixed for beta.
 #
 
 import os
