@@ -4,10 +4,21 @@
 #  Copyright (C) 2015 ClassCat Co.,Ltd. All rights reseerved.
 ##############################################################
 
+# ===  Notice ===
+# all python scripts were written by masao (@classcat.com)
+#
+# === History ===
+# 02-aug-15 : fixed for beta.
+#
+
 import os.path
 
 ccp_conf = {
     'lang' : 'ja',
+
+    'username' : 'cc-admin',
+
+    'password' : 'ClassCat',
 
     # Ossec directory
     'ossec_dir' : "/var/ossec",
@@ -27,6 +38,9 @@ ccp_conf = {
 class CCPConf (object):
     def __init__(self):
         self.lang = ccp_conf['lang']
+
+        self.username = ccp_conf['username']
+        self.password = ccp_conf['password']
 
         self.ossec_dir = ccp_conf['ossec_dir']
         self.ossec_max_alerts_per_page = ccp_conf['ossec_max_alerts_per_page']

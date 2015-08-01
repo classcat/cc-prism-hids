@@ -8,6 +8,7 @@
 # all python scripts were written by masao (@classcat.com)
 #
 # === History ===
+# 02-aug-15 : english text for classcat
 # 01-aug-15 : fixed for beta
 #
 
@@ -36,6 +37,17 @@ class Help(View):
 
         buffer_classcat = ""
         if self.is_lang_ja:
+            buffer_classcat = """\
+<br/>
+<h3 class="my">ClassCat&reg; Prism for HIDS</h3>
+Copyright &copy; 2015 ClassCat&reg; Co.,Ltd. All rigths reserved.<br/>
+<br/>
+本ソフトウェアは OSSEC WEB UI を GNU General Public License (version 3) に従って<br/>
+(株)クラスキャットが全てのコードを書き直したソフトウェアです。
+<br/><br/>
+<!-- <hr/> -->
+            """
+        else:
             buffer_classcat = """\
 <br/>
 <h3 class="my">ClassCat&reg; Prism for HIDS</h3>
