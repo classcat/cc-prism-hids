@@ -1,5 +1,14 @@
+########################################################################
+# ClassCat(R) Prism for HIDS
+# Copyright (C) 2015 ClassCat Co.,Ltd. All righs reserved.
+########################################################################
+
 #
-# ossec_rules.xml
+# rule map for ossec_rules.xml
+#
+
+# --- HISOTRY ---
+# 03-aug-15 : fixed
 #
 
 #group,     Id,        parent,    level,    category,    group2
@@ -17,5 +26,45 @@ ossec,	    512,        510,	  3,	    -,		 rootcheck
 ossec,	    513,        510,	  9,	    -,		 rootcheck
 ossec,	    514,        510,	  2,	    -,		 rootcheck
 ossec,	    515,        510,	  0,	    -,		 rootcheck/syscheck
+ossec,	    516,        510,	  3,	    -,		 rootcheck
+ossec,	    518,        514,	  9,	    -,		 rootcheck
+ossec,	    519,        516,	  7,	    -,		 rootcheck
 
+# Process monitoring rules
 ossec,	    530,        500,	  0,	    -,		 process_monitor
+ossec,	    531,        530,	  7,	    -,		 low_diskspace
+ossec,	    532,        531,	  0,	    -,		 -
+ossec,	    533,        530,	  7,	    -,		 -
+ossec,	    534,        530,	  1,	    -,		 -
+ossec,	    535,        530,	  1,	    -,		 -
+ossec,	    550,        -,	  7,	    ossec,	 syscheck
+ossec,	    551,        -,	  7,	    ossec,	 syscheck
+ossec,	    552,        -,	  7,	    ossec,	 syscheck
+ossec,	    553,        -,	  7,	    ossec,	 syscheck
+ossec,	    554,        -,	  0,	    ossec,	 syscheck
+ossec,	    555,        500,	  7,	    ossec,	 syscheck/agentless
+
+# Hostinfo rules
+ossec,	    580,        -,	  8,	    ossec,	 hostinfo
+ossec,	    581,        -,	  8,	    ossec,	 hostinfo
+
+# File rotation/reduced rules
+ossec,	    591,        500,	  3,	    -,	 	 -
+ossec,	    592,        500,	  8,	    -,	 	 attacks
+ossec,	    593,        500,	  9,	    -,	 	 logs_cleared
+ossec,	    594,        550,	  5,	    -,	 	 syscheck
+ossec,	    595,        551,	  5,	    ossec,	 syscheck
+ossec,	    596,        552,	  5,	    ossec,	 syscheck
+ossec,	    597,        553,	  5,	    ossec,	 syscheck
+ossec,	    598,        554,	  5,	    ossec,	 syscheck
+
+ossec,	    600,        -,	  0,	    -,	 	 active_response
+ossec,	    601,        600,	  3,	    -,	 	 active_response
+ossec,	    602,        600,	  3,	    -,	 	 active_response
+ossec,	    603,        600,	  3,	    -,	 	 active_response
+ossec,	    604,        600,	  3,	    -,	 	 active_response
+ossec,	    605,        600,	  3,	    -,	 	 active_response
+ossec,	    606,        600,	  3,	    -,	 	 active_response
+
+
+### End of Rule Map ###
