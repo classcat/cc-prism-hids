@@ -7,6 +7,8 @@
 # all python scripts were written by masao (@classcat.com)
 #
 # === History ===
+# 03-aug-15 : rule map added for rc.
+# (Beta)
 # 01-aug-15 : fixed for beta
 #
 
@@ -22,18 +24,17 @@ from datetime import *
 import time
 import uuid
 import hashlib
+import glob
 
 from collections import OrderedDict
 
 from babel.numbers import format_decimal
 
-import os_lib_handle
-#import os_lib_agent
-#import os_lib_alerts
+#import os_lib_handle
 import os_lib_stats
 
-from ossec_categories import global_categories
-from ossec_formats import log_categories
+#from ossec_categories import global_categories
+#from ossec_formats import log_categories
 
 from .view import View
 
@@ -42,8 +43,58 @@ class Stats(View):
     def __init__(self, request, conf):
         super().__init__(request, conf)
 
+        self.rmap = {}
+
+        self._read_rmaps()
+
         self._make_contents()
         self._make_html()
+
+
+    def _read_rmaps(self):
+        rmap_home = os.environ['CCPRISM_HOME'] + "/rmaps"
+        for file in glob.glob(rmap_home + "/" + "*.csv"):
+
+            fobj = None
+            try:
+                fobj = open(file, 'r')
+            except Exception as e:
+                self.is_rmap_error= True
+                traceback.print_exc(file=sys.stdout)
+                continue
+
+            while True:
+                line = fobj.readline()
+                if not line:
+                    break
+
+                line = line.strip()
+
+                if line.startswith('#'):
+                    continue
+
+                if not line:
+                    continue
+
+                # #group,     Id,        parent,    level,    category,    group2
+                # ossec,      500,        -,        0,        ossec,   	 -
+                tokens = line.split(',')
+
+                if len(tokens) != 6:
+                    continue
+
+                group = tokens[0].strip()
+                rule_id = tokens[1].strip()
+                parent = tokens[2].strip()
+                level = tokens[3].strip()
+                category = tokens[4].strip()
+                group2 = tokens[5].strip()
+
+                #self.rmap[str(rule_id)] = {'group' : group, 'parent', parent, 'level' : int(level), 'category': category, 'group2' : group2}
+                self.rmap[str(rule_id)] = {'group':group, 'parent':parent, 'level':int(level), 'category':category, 'group2':group2}
+
+            if fobj:
+                fobj.close()
 
 
     def _make_contents(self):
@@ -392,9 +443,23 @@ class Stats(View):
         # RULE
         #
 
+        rmap = self.rmap
+
         msg_rule = "Aggregate values by rule"
         if is_lang_ja:
             msg_rule = "ルールによる集計値"
+
+        msg_rule_group = "Group"
+        if is_lang_ja:
+            msg_rule_group = "グループ"
+
+        msg_rule_group2 = "Group 2"
+        if is_lang_ja:
+            msg_rule_group2 = "グループ 2"
+
+        msg_rule_level = "Level"
+        if is_lang_ja:
+            msg_rule_level = "レベル"
 
         buffer += """\
 <td width="50%%">
@@ -404,8 +469,11 @@ class Stats(View):
     <th>%s</th>
     <th>%s</th>
     <th>%s</th>
+    <th>%s</th>
+    <th>%s</th>
+    <th>%s</th>
     </tr>
-        """ % (msg_rule, msg_option, msg_value, msg_percentage)
+        """ % (msg_rule, msg_option,  msg_rule_group, msg_rule_group2, msg_rule_level, msg_value, msg_percentage)
 
         if 'rule' in daily_stats.keys():
 
@@ -423,35 +491,67 @@ class Stats(View):
 
                 odd_count += 1
 
+                # 02-aug-15 : rule map
+                rule_group = ""
+                rule_group2 = ""
+                rule_level = ""
+
+                rule_record = rmap.get(str(l_rule), None)
+                if rule_record:
+                    rule_group = rule_record.get('group')
+                    rule_group2 = rule_record.get('group2')
+                    rule_level = str(rule_record.get('level'))
+
                 if is_lang_ja:
                     buffer += """
                 	    <tr %s>
 	    <td>ルール <b>%s</b> 総計</td>
+         <td>%s</td>
+         <td>%s</td>
+         <td align="center">%s</td>
 	    <td align="right">%s</td>
 	    <td align="right">%s %%</td>
 	    </tr>
-                    """ % (odd_msg, l_rule,  format_decimal(v_rule, locale='en_US'), "%.01f" % rule_pct)
+                    """ % (odd_msg, l_rule,  rule_group, rule_group2, rule_level, format_decimal(v_rule, locale='en_US'), "%.01f" % rule_pct)
                 else:
                     buffer += """
                 	    <tr %s>
 	    <td>Total for Rule %s</td>
+         <td>%s</td>
+         <td>%s</td>
+         <td align="center">%s</td>
 	    <td align="right">%s</td>
 	    <td align="right">%s %%</td>
 	    </tr>
-                    """ % (odd_msg, l_rule,  format_decimal(v_rule, locale='en_US'), "%.01f" % rule_pct)
+                    """ % (odd_msg, l_rule,  rule_group, rule_group2, rule_level, format_decimal(v_rule, locale='en_US'), "%.01f" % rule_pct)
 
         if (odd_count % 2) == 0:
             odd_msg =  ' class="odd"'
         else:
             odd_msg = ""
 
-        buffer += """
+        if is_lang_ja:
+            buffer += """
+        <tr %s>
+<td>全ルール総計</td>
+<td/>
+<td/>
+<td/>
+<td align="right">%s</td>
+<td align="right">100%%</td>
+</tr>
+            """ % (odd_msg, format_decimal(daily_stats['alerts'], locale='en_US'))
+        else:
+            buffer += """
         <tr %s>
 <td>Total for all rules</td>
-<td>%s</td>
-<td>100%%</td>
+<td/>
+<td/>
+<td/>
+<td align="right">%s</td>
+<td align="right">100%%</td>
 </tr>
-        """ % (odd_msg, format_decimal(daily_stats['alerts'], locale='en_US'))
+            """ % (odd_msg, format_decimal(daily_stats['alerts'], locale='en_US'))
 
         buffer += """
         </table>

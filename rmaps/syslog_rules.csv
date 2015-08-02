@@ -1,0 +1,9 @@
+#
+# 
+#
+
+#group,		Id,	parent,	level,	category,    group2
+
+syslog/sudo,	5400,	-,	0,	-,	     -
+syslog/sudo,	5401,	5400,	10,	-,	     -
+syslog/sudo,	5402,	5400,	3,	-,	     -

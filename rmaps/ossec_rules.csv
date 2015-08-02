@@ -1,0 +1,21 @@
+#
+# ossec_rules.xml
+#
+
+#group,     Id,        parent,    level,    category,    group2
+
+ossec,      500,        -,        0,        ossec,   	 -
+ossec,      501,        500,      3,        -,		 -
+ossec,	    502,        500,      3,	    -,           -
+ossec,	    503,        500,      3,	    -,           -
+ossec,	    504,        500,      3,	    -, 		 -
+
+ossec,	    509,        -,	  0,	    ossec,    	 rootcheck
+ossec,	    510,        509,	  7,	    -,		 rootcheck
+ossec,	    511,        510,	  0,	    -,		 rootcheck
+ossec,	    512,        510,	  3,	    -,		 rootcheck
+ossec,	    513,        510,	  9,	    -,		 rootcheck
+ossec,	    514,        510,	  2,	    -,		 rootcheck
+ossec,	    515,        510,	  0,	    -,		 rootcheck/syscheck
+
+ossec,	    530,        500,	  0,	    -,		 process_monitor
