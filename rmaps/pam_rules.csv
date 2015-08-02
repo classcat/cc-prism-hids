@@ -1,0 +1,9 @@
+#
+# pam_rules.xml
+#
+
+#group,		Id,	parent,	level,	category,    group2
+
+pam/syslog,	5500,	-	0,	-,	     -
+pam/syslog,	5501,	5500,	3,	-,	     authentication_success
+pam/syslog,	5502,	5500,	3,	-,	     -
