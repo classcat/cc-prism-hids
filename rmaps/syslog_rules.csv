@@ -1,9 +1,149 @@
+########################################################################
+# ClassCat(R) Prism for HIDS
+# Copyright (C) 2015 ClassCat Co.,Ltd. All righs reserved.
+########################################################################
+
 #
-# syslog_rules.xml
+# rule map for syslog_rules.xml
 #
 
-#group,		Id,	parent,	level,	category,    group2
+# TODO : parent ID が２つあるケースが幾つか。
+#syslog/su,	5305,	5303/5304,	3,	-,		authentication_success
 
-syslog/sudo,	5400,	-,	0,	-,	     -
-syslog/sudo,	5401,	5400,	10,	-,	     -
-syslog/sudo,	5402,	5400,	3,	-,	     -
+# --- HISOTRY ---
+# 03-aug-15 : fixed for rc.
+#
+
+#group,		Id,	parent,		level,	category,	group2
+
+syslog/errors,	1001,	-,		2,	-,		-
+syslog/errors,	1002,	-,		2,	-,		-
+syslog/errors,	1003,	-,		13,	-,		-
+syslog/errors,	1004,	-,		5,	-,		-
+syslog/errors,	1005,	-,		5,	-,		-
+syslog/errors,	1006,	-,		5,	-,		-
+syslog/errors,	1007,	-,		7,	-,		-
+syslog/errors,	1008,	-,		5,	-,		-
+syslog/errors,	1009,	-,		0,	-,		-
+
+# NFS messages
+syslog/nfs,	2100,	-,		0,	-,		-
+syslog/nfs,	2101,	2100,		4,	-,		-
+syslog/nfs,	2102,	2100,		4,	-,		-
+syslog/nfs,	2103,	-,		4,	-,		-
+syslog/nfs,	2104,	2100,		2,	-,		-
+
+# xinetd messages
+syslog/xinetd,	2301,	-,		10,	-,		-
+
+# Access control messages
+syslog/access_control,	2501,	-,	5,	-,		authentication_failed
+syslog/access_control,	2502,	-,	10,	-,		authentication_failed
+syslog/access_control,	2503,	-,	5,	-,		access_denied
+syslog/access_control,	2504,	-,	9,	-,		invalid_login
+syslog/access_control,	2505,	-,	3,	-,		-
+syslog/access_control,	2506,	-,	3,	-,		-
+syslog/access_control,	2507,	-,	0,	-,		-
+syslog/access_control,	2508,	2507,	3,	-,		-
+syslog/access_control,	2509,	2507,	5,	-,		-
+
+# rshd
+syslog/access_control,	2550,	-,	0,	-,		-
+syslog/access_control,	2551,	2550,	10,	-,		connection_attempt
+
+# Mail/Procmail messages
+syslog/mail,	2701,	-,		0,	-,		-
+
+# Smartd messages
+syslog/smartd,	2800,	-,		0,	-,		-
+syslog/smartd,	2801,	2800,		0,	-,		-
+syslog/smartd,	2802,	2800,		0,	-,		-
+syslog/smartd,	2803,	2800,		0,	-,		-
+
+# Linux Kernel messages
+syslog/linuxkernel,	5100,	-,	0,	-,		-
+syslog/linuxkernel,	5101,	5100,	0,	-,		-
+syslog/linuxkernel,	5102,	5100,	0,	-,		-
+syslog/linuxkernel,	5103,	5100,	9,	-,		-
+syslog/linuxkernel,	5104,	5100,	8,	-,		promisc
+syslog/linuxkernel,	5105,	5100,	0,	-,		-
+syslog/linuxkernel,	5106,	5100,	0,	-,		-
+syslog/linuxkernel,	5107,	5100,	0,	-,		-
+syslog/linuxkernel,	5108,	5100,	12,	-,		service_availability
+syslog/linuxkernel,	5109,	5100,	4,	-,		-
+syslog/linuxkernel,	5110,	5100,	4,	-,		-
+syslog/linuxkernel,	5111,	5100,	0,	-,		-
+syslog/linuxkernel,	5112,	5100,	0,	-,		-
+syslog/linuxkernel,	5113,	5100,	7,	-,		-
+
+syslog/linuxkernel,	5130,	5100,	7,	-,		-
+syslog/linuxkernel,	5131,	5100,	3,	-,		-
+
+syslog/linuxkernel,	5200,	-,	3,	-,		-
+
+# Cron messages
+syslog/cron,		2830,	-,	0,	-,		-
+syslog/cron,		2831,	2830,	0,	-,		-
+syslog/cron,		2832,	2830,	5,	-,		-
+syslog/cron,		2833,	2832,	8,	-,		-
+syslog/cron,		2834,	2830,	5,	-,		-
+
+# Su messages
+syslog/su,		5300,	-,	0,	-,		-
+syslog/su,		5301,	5300,	5,	-,		authentication_failed
+syslog/su,		5302,	5301,	9,	-,		authentication_failed
+syslog/su,		5303,	5300,	3,	-,		authentication_success
+syslog/su,		5304,	5300,	3,	-,		authentication_success
+syslog/su,		5305,	5303,	3,	-,		-
+#syslog/su,		5305,	5303/5304,	3,	-,		authentication_success
+syslog/su,		5306,	5300,	0,	-,		-
+
+# Tripwire messages
+syslog/tripwire		7101,	-,	8,	-,		-
+
+# Adduser messages
+syslog/adduser		5901,	-,	8,	-,		-
+syslog/adduser		5902,	-,	8,	-,		-
+syslog/adduser		5903,	-,	2,	-,		-
+syslog/adduser		5904,	-,	8,	-,		-
+
+# Sudo messages
+syslog/sudo,	5400,	-,		0,	-,		-
+syslog/sudo,	5401,	5400,		10,	-,	     	-
+syslog/sudo,	5402,	5400,		3,	-,	     	-
+syslog/sudo,	5403,	5400,		4,	-,	     	-
+
+# PPTP messages
+syslog/pptp,	9100,	-,		0,	-,	     	-
+syslog/pptp,	9101,	9100,		0,	-,	     	-
+syslog/pptp,	9102,	9100,		0,	-,	     	-
+
+# Syslog FTS
+syslog/fts,	10100,	-,		4,	-,	     	authentication_success
+
+syslog/squid,	9200,	-,		0,	-,	     	-
+syslog/squid,	9201,	9200,		0,	-,	     	-
+
+syslog/dpkg,	2900,	-,		0,	-,	     	-
+syslog/dpkg,	2901,	2900,		3,	-,	     	-
+syslog/dpkg,	2902,	2900,		7,	-,	     	config_changed
+syslog/dpkg,	2903,	2900,		7,	-,	     	config_changed
+
+syslog/yum,	2930,	-,		0,	-,	     	-
+syslog/yum,	2931,	-,		0,	-,	     	-
+syslog/yum,	2932,	2930,		7,	-,	     	config_changed
+#syslog/yum,	2932,	2930/2931,	7,	-,	     	config_changed
+syslog/yum,	2933,	2930,		7,	-,	     	config_changed
+#syslog/yum,	2933,	2930/2931,	7,	-,	     	config_changed
+syslog/yum,	2934,	2930,		7,	-,	     	config_changed
+#syslog/yum,	2934,	2930/2931,	7,	-,	     	config_changed
+
+# SCSI CONTROLLER
+syslog/yum,	2935,	5100,		0,	-,	     	-
+syslog/yum,	2936,	5100,		0,	-,	     	-
+syslog/yum,	2937,	2935,		12,	-,	     	-
+syslog/yum,	2938,	2936,		12,	-,	     	-
+syslog/yum,	2939,	2936,		12,	-,	     	-
+
+
+### End of Rule Map ###
