@@ -1,0 +1,63 @@
+########################################################################
+# ClassCat(R) Prism for HIDS
+# Copyright (C) 2015 ClassCat Co.,Ltd. All righs reserved.
+########################################################################
+
+#
+# rule map for web_rules.xml
+#
+
+# --- HISOTRY ---
+# 03-aug-15 : fixed for rc.
+#
+
+#group,		Id,	parent,		level,	category,	group2
+
+web/accesslog,	31100,	-,		0,	web-log,		-
+web/accesslog,	31101,	31100,		5,	-,		-
+web/accesslog,	31102,	31100,		0,	-,		-
+web/accesslog,	31103,	31100,		6,	-,		attack/sql_injection
+web/accesslog,	31104,	31100,		6,	-,		attack
+web/accesslog,	31105,	31100,		6,	-,		attack
+web/accesslog,	31106,	31103,		6,	-,		attack
+#web/accesslog,	31106,	31103/31104/31105,	6,	-,		attack
+
+web/accesslog,	31108,	31100,		0,	-,		-
+web/accesslog,	31109,	31100,		6,	-,		attack
+web/accesslog,	31110,	31100,		6,	-,		-
+
+# If your site have a search engine, you may need to ignore it in here.
+
+web/accesslog,	31107,	31103,		0,	-,		-
+#web/accesslog,	31107,	31103/31104/31105,	6,	-,		-
+
+web/accesslog,	31115,	31100,		13,	-,		invalid_access
+
+# 500 error code, server error
+web/accesslog,	31120,	31100,		5,	-,		-
+web/accesslog,	31121,	31120,		4,	-,		-
+web/accesslog,	31122,	31120,		5,	-,		system_error
+web/accesslog,	31123,	31120,		4,	-,		-
+
+# Rules to ignore crawlers
+web/accesslog,	31140,	31101,		0,	-,		-
+
+# Ignoring nginx 499's
+web/accesslog,	31141,	31101,		0,	-,		-
+
+web/accesslog,	31151,	31101,		10,	-,		web_scan/recon
+web/accesslog,	31152,	31103,		10,	-,		attack/sql_injection
+web/accesslog,	31153,	31104,		10,	-,		attack
+web/accesslog,	31154,	31105,		10,	-,		attack
+
+web/accesslog,	31161,	31121,		10,	-,		web_scan/recon
+web/accesslog,	31162,	31122,		10,	-,		system_error
+web/accesslog,	31163,	31123,		10,	-,		web_scan/recon
+web/accesslog,	31164,	31100,		6,	-,		attack/sqlinjection
+web/accesslog,	31165,	31100,		6,	-,		attack/sqlinjection
+
+
+### End of Rule Map ###
+
+
+
