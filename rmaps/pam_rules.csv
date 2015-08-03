@@ -1,5 +1,14 @@
+########################################################################
+# ClassCat(R) Prism for HIDS
+# Copyright (C) 2015 ClassCat Co.,Ltd. All righs reserved.
+########################################################################
+
 #
-# pam_rules.xml
+# rule map for pam_rules.xml
+#
+
+# --- HISOTRY ---
+# 03-aug-15 : fixed for rc.
 #
 
 #group,		Id,	parent,	level,	category,    group2
@@ -7,3 +16,19 @@
 pam/syslog,	5500,	-	0,	-,	     -
 pam/syslog,	5501,	5500,	3,	-,	     authentication_success
 pam/syslog,	5502,	5500,	3,	-,	     -
+pam/syslog,	5503,	5500,	5,	-,	     authentication_failed
+pam/syslog,	5504,	5500,	5,	-,	     invalid_login
+
+# Ignoring Annoying Ubuntu/debian cron login events.
+pam/syslog,	5521,	5501,	0,	-,	     -
+pam/syslog,	5522,	5502,	0,	-,	     -
+pam/syslog,	5523,	5504,	0,	-,	     -
+
+pam/syslog,	5551,	5503,	10,	-,	     authentication_failures
+pam/syslog,	5552,	5500,	0,	-,	     -
+pam/syslog,	5553,	5500,	4,	-,	     -
+pam/syslog,	5554,	-,	4,	-,	     -
+pam/syslog,	5555,	-,	3,	-,	     -
+
+
+### End of Rule Map ###
