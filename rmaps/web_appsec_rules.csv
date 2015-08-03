@@ -1,0 +1,73 @@
+########################################################################
+# ClassCat(R) Prism for HIDS
+# Copyright (C) 2015 ClassCat Co.,Ltd. All righs reserved.
+########################################################################
+
+#
+# rule map for web_appsec__rules.xml
+#
+
+# --- HISOTRY ---
+# 03-aug-15 : fixed for rc.
+#
+
+#group,			Id,	parent,		level,	category,	group2
+
+# Checking POST / requests - WP comment spam coming from fake search engines. 
+web/appsec/attack,	31501,	31100,		6,	-,		-
+
+# Timthumb scans
+web/appsec/attack,	31502,	31100,		6,	-,		-
+
+# osCommerce file manager login.php bypass
+web/appsec/attack,	31504,	31100,		6,	-,		-
+
+# Timthumb backdoor access.
+web/appsec/attack,	31505,	31100,		6,	-,		-
+
+# Timthumb backdoor access.
+web/appsec/attack,	31506,	31100,		6,	-,		-
+
+# MSSQL IIS injection rules
+web/appsec/attack,	31507,	31100,		6,	-,		-
+
+# BAD/Annoying user agents
+web/appsec/attack,	31508,	31100,		6,	-,		-
+
+# Wordpress wp-login.php brute force
+web/appsec/attack,	31509,	31108,		3,	-,		-
+
+# If we see frequent wp-login POST's, it is likely a bot.
+web/appsec/attack,	31510,	31509,		8,	-,		-
+
+# Nothing wrong with wget per se, but it misses a lot of links
+# that generates many 404s. Blocking it to avoid the noise.
+web/appsec/attack,	31511,	31100,		6,	-,		-
+
+# Uploadify scans.
+web/appsec/attack,	31512,	31100,		6,	-,		-
+
+# BBS delete.php skin_path.
+web/appsec/attack,	31513,	31100,		6,	-,		-
+
+# Simple shell.php command execution
+web/appsec/attack,	31514,	31100,		6,	-,		-
+
+# PHPMyAdmin scans
+web/appsec/attack,	31515,	31100,		6,	-,		-
+
+# Suspicious URL's access
+web/appsec/attack,	31516,	31100,		6,	-,		-
+
+# Checking POST requests - Too many in a small type = likely a bot
+web/appsec/attack,	31530,	31100,		3,	-,		-
+web/appsec/attack,	31531,	31530,		0,	-,		-
+
+web/appsec/attack,	31533,	31530,		10,	-,		-
+
+# Anomaly rules - Used on common web attacks
+web/appsec/attack,	31550,	31100,		6,	-,		-
+
+
+### End of Rule Map ###
+
