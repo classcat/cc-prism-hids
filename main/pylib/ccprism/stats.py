@@ -7,6 +7,7 @@
 # all python scripts were written by masao (@classcat.com)
 #
 # === History ===
+# 03-aug-15 : display level with RED in case >= 7.
 # 03-aug-15 : rule map added for rc.
 # (Beta)
 # 01-aug-15 : fixed for beta
@@ -403,6 +404,9 @@ class Stats(View):
                 l_level2 = l_level
                 if len(str(l_level)) == 1:
                     l_level2 = "&nbsp;%s" % l_level
+                # 03-aug-15
+                if int(l_level) >= 7:
+                    l_level2 = """<span style="color:red;">%s</span>""" % l_level2
 
                 if is_lang_ja:
                     buffer += """
@@ -439,9 +443,9 @@ class Stats(View):
 </td>"""  % (odd_msg, msg_total_level, format_decimal(daily_stats['alerts'], locale='en_US'))
 
 
-        #
-        # RULE
-        #
+        ##
+        ## RULE
+        ##
 
         rmap = self.rmap
 
@@ -501,6 +505,10 @@ class Stats(View):
                     rule_group = rule_record.get('group')
                     rule_group2 = rule_record.get('group2')
                     rule_level = str(rule_record.get('level'))
+
+                # 03-aug-15
+                if rule_level and int(rule_level) >= 7:
+                    rule_level = """<span style="color:red;">%s</span>""" % rule_level
 
                 if is_lang_ja:
                     buffer += """
