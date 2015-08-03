@@ -1,0 +1,68 @@
+########################################################################
+# ClassCat(R) Prism for HIDS
+# Copyright (C) 2015 ClassCat Co.,Ltd. All righs reserved.
+########################################################################
+
+#
+# rule map for named_rules.xml
+#
+
+# --- HISOTRY ---
+# 03-aug-15 : fixed for rc.
+#
+
+#group,		Id,	parent,		level,	category,	group2
+
+syslog/named,	12100,	-,		0,	-,		-
+syslog/named,	12101,	12100,		12,	-,		invalid_access
+syslog/named,	12102,	12100,		9,	-,		access_denied
+syslog/named,	12103,	12100,		4,	-,		client_misconfig
+syslog/named,	12104,	12100,		4,	-,		system_error
+syslog/named,	12105,	12100,		4,	-,		-
+syslog/named,	12106,	12100,		4,	-,		-
+syslog/named,	12107,	12100,		0,	-,		-
+syslog/named,	12108,	12100,		0,	-,		-
+syslog/named,	12109,	12100,		12,	-,		service_availability
+syslog/named,	12110,	12100,		8,	-,		system_error
+syslog/named,	12111,	-,		8,	-,		system_error
+syslog/named,	12112,	-,		4,	-,		-
+syslog/named,	12113,	12100,		0,	-,		-
+syslog/named,	12114,	12100,		1,	-,		-
+syslog/named,	12115,	12100,		0,	-,		-
+syslog/named,	12116,	12100,		1,	-,		-
+syslog/named,	12117,	12100,		1,	-,		-
+syslog/named,	12118,	12100,		1,	-,		-
+syslog/named,	12119,	12100,		3,	-,		-
+syslog/named,	12120,	12100,		1,	-,		-
+syslog/named,	12121,	12100,		1,	-,		-
+syslog/named,	12122,	12100,		1,	-,		-
+syslog/named,	12123,	12100,		0,	-,		-
+
+syslog/named,	12125,	12100,		3,	-,		-
+syslog/named,	12126,	12100,		0,	-,		-
+syslog/named,	12127,	12100,		1,	-,		-
+syslog/named,	12128,	12100,		1,	-,		-
+syslog/named,	12129,	12128,		4,	-,		-
+syslog/named,	12130,	12100,		2,	-,		-
+syslog/named,	12131,	12100,		2,	-,		-
+syslog/named,	12132,	12128,		0,	-,		-
+syslog/named,	12133,	12100,		4,	-,		-
+syslog/named,	12134,	12100,		4,	-,		-
+syslog/named,	12135,	12100,		0,	-,		-
+syslog/named,	12136,	12128,		4,	-,		-
+syslog/named,	12137,	12100,		0,	-,		-
+syslog/named,	12138,	12100,		0,	-,		-
+syslog/named,	12139,	12100,		3,	-,		-
+syslog/named,	12140,	12100,		2,	-,		-
+syslog/named,	12141,	12100,		1,	-,		-
+syslog/named,	12142,	12100,		0,	-,		-
+syslog/named,	12143,	12100,		0,	-,		-
+syslog/named,	12144,	12100,		9,	-,		-
+syslog/named,	12145,	12100,		1,	-,		-
+syslog/named,	12146,	12100,		0,	-,		-
+syslog/named,	12147,	12100,		0,	-,		-
+syslog/named,	12148,	12100,		0,	-,		-
+
+### End of Rule Map ###
+
+
