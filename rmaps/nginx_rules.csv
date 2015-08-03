@@ -1,0 +1,33 @@
+########################################################################
+# ClassCat(R) Prism for HIDS
+# Copyright (C) 2015 ClassCat Co.,Ltd. All righs reserved.
+########################################################################
+
+#
+# rule map for nginx_rules.xml
+#
+
+# --- HISOTRY ---
+# 03-aug-15 : fixed for beta
+#
+
+#group,		Id,	parent,		level,	category,	group2
+
+apache,		31300,	-,		0,	-,		-
+apache,		31301,	31300,		3,	-,		-
+apache,		31302,	31300,		3,	-,		-
+apache,		31303,	31300,		5,	-,		-
+
+apache,		31310,	31301,		0,	-,		-
+apache,		31311,	31301,		0,	-,		-
+apache,		31312,	31301,		0,	-,		-
+
+apache,		31315,	31301,		5,	-,		authentication_failed
+apache,		31316,	31315,		10,	-,		authentication_failures
+apache,		31317,	31303,		0,	-,		-
+apache,		31320,	31303,		10,	-,		invalid_request
+
+
+### End of Rule Map ###
+
+
