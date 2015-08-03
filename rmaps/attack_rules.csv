@@ -1,0 +1,32 @@
+########################################################################
+# ClassCat(R) Prism for HIDS
+# Copyright (C) 2015 ClassCat Co.,Ltd. All righs reserved.
+########################################################################
+
+#
+# rule map for attack_rules.xml
+#
+
+# --- HISOTRY ---
+# 03-aug-15 : fixed for rc
+#
+
+#group,		Id,	parent,		level,	category,	group2
+
+syslog/attacks,	40101,	-,		12,	-,		invalid_login
+syslog/attacks,	40102,	-,		14,	-,		exploit_attempt
+syslog/attacks,	40103,	-,		14,	-,		exploit_attempt
+syslog/attacks,	40104,	-,		13,	-,		exploit_attempt
+syslog/attacks,	40105,	-,		12,	-,		exploit_attempt
+syslog/attacks,	40106,	-,		12,	-,		exploit_attempt
+syslog/attacks,	40107,	-,		14,	-,		exploit_attempt
+
+syslog/attacks,	40109,	-,		12,	-,		exploit_attempt
+syslog/attacks,	40111,	-,		10,	-,		authentication_failures
+syslog/attacks,	40112,	-,		12,	-,		-
+syslog/attacks,	40113,	-,		12,	-,		virus
+
+
+### End of Rule Map ###
+
+
