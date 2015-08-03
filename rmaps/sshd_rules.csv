@@ -1,0 +1,67 @@
+########################################################################
+# ClassCat(R) Prism for HIDS
+# Copyright (C) 2015 ClassCat Co.,Ltd. All righs reserved.
+########################################################################
+
+#
+# rule map for sshd_rules.xml
+#
+
+# --- HISOTRY ---
+# 03-aug-15 : fixed for rc.
+#
+
+#group,		Id,	parent,		level,	category,	group2
+
+syslog/sshd,	5700,	-,		0,	-,		-
+syslog/sshd,	5701,	5700,		8,	-,		-
+syslog/sshd,	5702,	5700,		5,	-,		-
+syslog/sshd,	5703,	5702,		10,	-,		-
+syslog/sshd,	5704,	5700,		4,	-,		-
+syslog/sshd,	5705,	5704,		10,	-,		-
+syslog/sshd,	5706,	5700,		6,	-,		recon
+syslog/sshd,	5707,	5700,		14,	-,		exploit_attempt
+syslog/sshd,	5709,	5700,		0,	-,		-
+syslog/sshd,	5710,	5700,		5,	-,		invalid_login/authentication_failed
+syslog/sshd,	5711,	5700,		0,	-,		-
+syslog/sshd,	5712,	5710,		10,	-,		authentication_failures
+syslog/sshd,	5713,	5700,		6,	-,		-
+syslog/sshd,	5714,	5713,		14,	-,		exploit_attempt
+syslog/sshd,	5715,	5700,		3,	-,		authentication_succeess
+syslog/sshd,	5716,	5700,		5,	-,		authentication_failed
+syslog/sshd,	5717,	5700,		4,	-,		-
+syslog/sshd,	5718,	5700,		5,	-,		invalid_login
+syslog/sshd,	5719,	-,		10,	-,		invalid_login
+syslog/sshd,	5720,	5716,		10,	-,		authentication_failures
+syslog/sshd,	5721,	5700,		0,	-,		-
+syslog/sshd,	5722,	5700,		0,	-,		-
+syslog/sshd,	5723,	5700,		0,	-,		-
+syslog/sshd,	5724,	5700,		0,	-,		-
+syslog/sshd,	5725,	5700,		0,	-,		-
+syslog/sshd,	5726,	5700,		5,	-,		-
+syslog/sshd,	5727,	5700,		0,	-,		-
+syslog/sshd,	5728,	5700,		4,	-,		authentication_failed
+syslog/sshd,	5729,	5700,		0,	-,		-
+syslog/sshd,	5730,	5700,		0,	-,		-
+syslog/sshd,	5731,	5700,		6,	-,		recon
+syslog/sshd,	5732,	5700,		0,	-,		-
+syslog/sshd,	5733,	5700,		0,	-,		authentication_failures
+syslog/sshd,	5734,	5700,		0,	-,		-
+syslog/sshd,	5735,	5700,		0,	-,		-
+syslog/sshd,	5736,	5700,		0,	-,		-
+syslog/sshd,	5737,	5700,		5,	-,		-
+syslog/sshd,	5738,	5700,		5,	-,		authentication_failed
+syslog/sshd,	5739,	5700,		4,	-,		-
+syslog/sshd,	5740,	5700,		4,	-,		-
+syslog/sshd,	5741,	5700,		4,	-,		-
+syslog/sshd,	5742,	5700,		4,	-,		-
+syslog/sshd,	5743,	5700,		4,	-,		-
+syslog/sshd,	5744,	5700,		4,	-,		-
+syslog/sshd,	5745,	5700,		4,	-,		-
+syslog/sshd,	5746,	5700,		4,	-,		-
+syslog/sshd,	5747,	5700,		6,	-,		-
+syslog/sshd,	5748,	5700,		6,	-,		-
+syslog/sshd,	5749,	5700,		4,	-,		-
+
+
+### End of Rule Map ###
